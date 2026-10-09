@@ -1,0 +1,1277 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Gridiron 151</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+:root{
+  --night:#0f1729; --night2:#182340; --night3:#22305a; --line:#2c3b66;
+  --ink:#1c2233; --paper:#f6f7fb; --text:#e9edf7; --muted:#8e9bbd;
+  --red:#e2402f; --red-d:#9e2417; --gold:#f5b700; --gold-d:#a77c00;
+  --hp-g:#4ade80; --hp-y:#fbbf24; --hp-r:#f05252;
+  --turf1:#1f6b3a; --turf2:#1c6135;
+  --px:"Press Start 2P", ui-monospace, monospace;
+  --ui:"Barlow Condensed", "Arial Narrow", system-ui, sans-serif;
+  --rh:46px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--night);color:var(--text);font-family:var(--ui);font-size:16px}
+body{padding-bottom:calc(var(--sheet-h,290px) + env(safe-area-inset-bottom));
+  background:radial-gradient(120% 60% at 50% -10%, #23345f 0%, var(--night) 60%) fixed}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+
+/* ---------- header ---------- */
+header{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 16px 10px;max-width:760px;margin:0 auto}
+.logo{font-family:var(--px);font-size:15px;line-height:1.3;letter-spacing:1px;color:var(--paper);text-shadow:2px 2px 0 var(--red-d)}
+.logo small{display:block;font-family:var(--ui);font-size:13px;font-weight:600;letter-spacing:.2px;color:var(--muted);text-shadow:none;margin-top:4px}
+.hdr{display:flex;align-items:center;gap:8px}
+.count{font-family:var(--px);font-size:9px;color:var(--gold);background:var(--night2);border:2px solid var(--line);border-radius:6px;padding:8px 9px;white-space:nowrap}
+.icon{width:34px;height:34px;border-radius:8px;background:var(--night2);border:2px solid var(--line);font-family:var(--px);font-size:11px}
+
+/* ---------- field ---------- */
+main{max-width:760px;margin:0 auto;padding:0 10px}
+.field{position:relative;border-radius:10px;overflow:hidden;padding:10px 4px 12px;
+  background:repeating-linear-gradient(180deg,var(--turf1) 0 46px,var(--turf2) 46px 92px);
+  border:3px solid #e8efe9;box-shadow:0 0 0 3px #0b1220, 0 14px 40px rgba(0,0,0,.45)}
+.field::before{content:"";position:absolute;inset:0;pointer-events:none;
+  background:repeating-linear-gradient(180deg,transparent 0 91px,rgba(255,255,255,.28) 91px 93px),
+             radial-gradient(90% 50% at 50% 0%,rgba(255,255,255,.10),transparent 70%)}
+.side{position:relative;z-index:1}
+.unit-tag{font-family:var(--px);font-size:7px;letter-spacing:2px;color:rgba(255,255,255,.5);text-align:center;margin:2px 0 6px}
+.row{display:flex;justify-content:center;gap:4px;margin:5px 0}
+.row.spread{justify-content:space-around}
+.row.wide{justify-content:space-between;padding:0 2px}
+.los{position:relative;z-index:1;height:3px;margin:9px 4px;background:repeating-linear-gradient(90deg,var(--gold) 0 12px,transparent 12px 18px)}
+
+.slot{position:relative;width:calc((100% - 20px)/6);max-width:100px;min-width:0;height:56px;border-radius:6px;padding:4px 2px;
+  background:rgba(8,16,30,.38);border:2px dashed rgba(255,255,255,.4);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;transition:transform .12s, border-color .12s}
+.slot .pos{font-weight:800;font-size:15px;letter-spacing:.5px;color:rgba(255,255,255,.92)}
+.slot .nm{font-weight:700;font-size:12.5px;line-height:1;text-align:center;letter-spacing:.2px;width:100%;overflow:hidden;white-space:nowrap}
+.slot .rt{position:absolute;top:-7px;right:-5px;min-width:24px;height:17px;padding:0 4px;border-radius:4px;font-weight:800;font-size:12px;line-height:17px;text-align:center;color:var(--ink);box-shadow:0 0 0 2px var(--night)}
+.field.armed .slot:not(.filled){border-color:rgba(245,183,0,.8);background:rgba(245,183,0,.10);animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{50%{background:rgba(245,183,0,.2)}}
+.slot.filled{background:var(--night);border:2px solid #0a1120;padding-top:9px;overflow:hidden;cursor:default;animation:none}
+.slot.filled::before{content:"";position:absolute;left:0;right:0;top:0;height:6px;background:linear-gradient(90deg,var(--t1) 0 50%,var(--t2) 50% 100%)}
+.slot.filled .pos{font-size:10px;color:var(--muted);order:2}
+.slot.filled .nm{color:var(--paper)}
+.slot.filled .star{position:absolute;top:7px;right:3px;font-size:9px;color:var(--gold)}
+.slot.selected{border:2px solid var(--gold)!important;background:rgba(245,183,0,.35)!important;transform:scale(1.07);animation:none!important}
+.slot.flash{animation:land .5s cubic-bezier(.2,1.6,.4,1)}
+@keyframes land{0%{transform:scale(1.35)}100%{transform:scale(1)}}
+.st-wrap{margin:10px 0 0;background:var(--night2);border:2px solid var(--line);border-radius:10px;padding:8px 8px 10px}
+.st-wrap .unit-tag{color:var(--muted)}
+.st-wrap .slot{width:30%;max-width:120px;background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.25)}
+
+/* ---------- console (bottom sheet) ---------- */
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--night2);border-top:3px solid #0a1120;
+  box-shadow:0 -1px 0 var(--line) inset, 0 -12px 30px rgba(0,0,0,.5);padding:10px 12px calc(10px + env(safe-area-inset-bottom))}
+.sheet-in{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:8px}
+.machine{background:linear-gradient(180deg,var(--red),#c8301f);border-radius:10px;padding:6px;box-shadow:0 3px 0 var(--red-d), inset 0 2px 0 rgba(255,255,255,.25)}
+.reels{display:grid;grid-template-columns:1fr 1fr 1.45fr;gap:5px}
+.reel{position:relative;height:var(--rh);overflow:hidden;border-radius:5px;background:var(--paper);border:3px solid var(--ink)}
+.reel::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,rgba(28,34,51,.28),transparent 32%,transparent 68%,rgba(28,34,51,.28))}
+.strip{will-change:transform}
+.ri{height:calc(var(--rh) - 6px);display:flex;align-items:center;justify-content:center;gap:6px;padding:0 4px;
+  font-family:var(--px);font-size:9px;color:var(--ink);white-space:nowrap;overflow:hidden}
+.ri .dot{width:10px;height:10px;border-radius:50%;background:var(--c);box-shadow:0 0 0 2px var(--ink);flex:none}
+.ri .pip{display:inline-block;width:7px;height:7px;background:var(--ink);margin-right:2px}
+.ri .pip.off{background:transparent;box-shadow:inset 0 0 0 2px var(--ink)}
+.ri.legend{background:var(--gold);}
+.ri.blank{color:#b7bfd3;font-size:12px}
+.respins{display:grid;grid-template-columns:1fr 1fr 1.45fr;gap:5px;margin-top:5px}
+.rs{height:28px;border-radius:5px;border:0;background:rgba(0,0,0,.25);color:#fff;font-weight:700;font-size:13.5px;letter-spacing:.3px;display:flex;align-items:center;justify-content:center;gap:6px}
+.rs b{font-family:var(--px);font-size:8px;background:var(--paper);color:var(--ink);border-radius:3px;padding:3px 4px}
+.rs:disabled{opacity:.4;cursor:not-allowed}
+
+.dialog{position:relative;background:var(--paper);color:var(--ink);border:3px solid var(--ink);border-radius:8px;padding:10px 12px 9px;
+  box-shadow:inset 0 0 0 2px var(--paper), inset 0 0 0 4px #b9c1d6;min-height:96px}
+.dialog .line{font-family:var(--px);font-size:10px;line-height:1.7}
+.dialog .line .nm{color:var(--red)}
+.dialog .sub{font-size:15px;font-weight:600;color:#4a5370;margin-top:4px;line-height:1.25}
+.mon{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.dexno{font-family:var(--px);font-size:8px;color:#6c7593}
+.tpill{font-weight:800;font-size:12px;letter-spacing:.6px;color:#fff;background:var(--c);border-radius:4px;padding:2px 7px;text-shadow:0 1px 0 rgba(0,0,0,.35)}
+.shiny{color:var(--gold-d);font-family:var(--px);font-size:8px}
+.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:8px}
+.st .k{display:flex;justify-content:space-between;font-weight:700;font-size:12.5px;color:#4a5370}
+.st .k b{color:var(--ink);font-weight:800}
+.bar{height:6px;background:#dfe3ee;border-radius:3px;overflow:hidden;margin-top:2px;box-shadow:inset 0 0 0 1px #c7cddd}
+.bar i{display:block;height:100%;border-radius:3px}
+.dialog .caret{position:absolute;right:10px;bottom:6px;font-size:10px;color:var(--red);animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:0}}
+
+.action{height:50px;border-radius:8px;border:3px solid var(--ink);font-family:var(--px);font-size:12px;letter-spacing:1px;
+  background:var(--gold);color:var(--ink);box-shadow:0 4px 0 var(--gold-d)}
+.action:active{transform:translateY(3px);box-shadow:0 1px 0 var(--gold-d)}
+.action:disabled{background:var(--night3);color:var(--muted);border-color:var(--line);box-shadow:none;font-family:var(--ui);font-size:16px;font-weight:700;letter-spacing:.2px}
+.action.place{background:var(--hp-g);box-shadow:0 4px 0 #1f8a4a}
+.action.go{background:var(--red);color:#fff;box-shadow:0 4px 0 var(--red-d)}
+
+/* ---------- overlays ---------- */
+.overlay{position:fixed;inset:0;z-index:50;background:rgba(6,10,20,.8);backdrop-filter:blur(3px);display:flex;align-items:flex-end;justify-content:center}
+.overlay[hidden]{display:none}
+.modal{background:var(--night2);border:3px solid var(--line);border-bottom:0;border-radius:14px 14px 0 0;width:100%;max-width:760px;max-height:92vh;overflow:auto;padding:18px 16px calc(22px + env(safe-area-inset-bottom))}
+@media(min-width:700px){.overlay{align-items:center}.modal{border-radius:14px;border-bottom:3px solid var(--line)}}
+.modal h2{font-family:var(--px);font-size:13px;line-height:1.5;margin:0 0 10px;color:var(--paper)}
+.modal h3{font-family:var(--px);font-size:9px;margin:22px 0 10px;color:var(--gold);letter-spacing:1px}
+.modal p,.modal li{font-size:17px;line-height:1.4;color:#cfd6ea}
+.modal ul{padding-left:18px;margin:6px 0}
+.mclose{float:right;background:none;border:0;font-size:28px;color:var(--muted);line-height:1;padding:0 4px}
+.record{font-family:var(--px);font-size:34px;line-height:1;color:var(--paper);text-shadow:4px 4px 0 var(--red-d)}
+.grade{display:inline-block;font-family:var(--px);font-size:16px;color:var(--ink);border:3px solid var(--ink);border-radius:6px;padding:7px 10px;margin-left:12px;vertical-align:middle}
+.kpis,.cards3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}
+.kpi{background:var(--night);border:2px solid var(--line);border-radius:8px;padding:10px 6px;text-align:center}
+.kpi b{display:block;font-size:24px;font-weight:800}
+.kpi span{font-size:13px;color:var(--muted);font-weight:600}
+.cards3 .kpi b{font-family:var(--px);font-size:16px;margin:4px 0 6px}
+table{width:100%;border-collapse:collapse;font-size:16px}
+td,th{padding:7px 4px;border-bottom:1px solid var(--line);text-align:left}
+th{font-size:13px;color:var(--muted);font-weight:600}
+td.n{text-align:right;font-variant-numeric:tabular-nums}
+td small{font-size:13px}
+.W{color:var(--hp-g);font-weight:800}.L{color:var(--hp-r);font-weight:800}
+.match{color:var(--gold)}
+.btnrow{display:flex;gap:8px;margin-top:14px}
+.btn{flex:1;height:48px;border-radius:8px;border:2px solid var(--line);background:var(--night3);font-weight:700;font-size:17px}
+.btn.pri{background:var(--gold);color:var(--ink);border:3px solid var(--ink);box-shadow:0 3px 0 var(--gold-d)}
+.toast{position:fixed;left:50%;top:14px;transform:translate(-50%,-90px);opacity:0;background:var(--paper);color:var(--ink);border:3px solid var(--ink);
+  padding:10px 14px;border-radius:8px;font-family:var(--px);font-size:9px;line-height:1.6;z-index:80;transition:transform .25s,opacity .25s;max-width:92vw;text-align:center}
+.toast.show{transform:translate(-50%,0);opacity:1}
+.gchip{display:inline-block;min-width:38px;text-align:center;font-family:var(--px);font-size:10px;color:var(--ink);border-radius:4px;padding:5px 6px}
+.finish{display:inline-block;margin:12px 0 2px;padding:7px 12px;border-radius:6px;font-weight:800;font-size:16px}
+.finish.in{background:rgba(74,222,128,.14);color:var(--hp-g);border:2px solid rgba(74,222,128,.4)}
+.finish.out{background:rgba(240,82,82,.12);color:var(--hp-r);border:2px solid rgba(240,82,82,.35)}
+.bracket{position:relative;display:flex;flex-direction:column;gap:14px;padding-left:14px}
+.bracket::before{content:"";position:absolute;left:4px;top:14px;bottom:14px;width:3px;background:var(--line);border-radius:2px}
+.rd{position:relative;background:var(--paper);color:var(--ink);border:3px solid var(--ink);border-radius:8px;padding:8px 10px}
+.rd::before{content:"";position:absolute;left:-17px;top:16px;width:11px;height:11px;border-radius:50%;background:var(--line);box-shadow:0 0 0 3px var(--night2)}
+.rd.won::before{background:var(--hp-g)}.rd.lost::before{background:var(--hp-r)}.rd.bye::before{background:var(--gold)}
+.rd.lost{border-color:var(--hp-r)}
+.rd.locked{background:transparent;border:2px dashed var(--line);color:var(--muted)}
+.rd .rn{font-family:var(--px);font-size:8px;letter-spacing:.5px;margin-bottom:6px;color:#6c7593}
+.rd.locked .rn{color:var(--muted)}
+.mu{display:flex;align-items:center;gap:8px;font-size:17px;font-weight:600;padding:3px 0}
+.mu.w{font-weight:800}.mu.w .sc{color:var(--ink)}
+.mu.dim{font-size:14px;color:#8a92aa;font-weight:600}
+.mu .seed{font-family:var(--px);font-size:8px;color:#6c7593;min-width:22px}
+.mu .sc{margin-left:auto;font-family:var(--px);font-size:12px;color:#8a92aa}
+.banner{background:var(--gold);color:var(--ink);border:3px solid var(--ink);font-family:var(--px);font-size:10px;line-height:1.6;border-radius:8px;padding:10px 12px;margin:12px 0;text-align:center}
+.note{background:var(--paper);color:var(--ink);border:3px solid var(--ink);border-radius:8px;padding:8px 10px;margin:8px 0;font-size:16px;line-height:1.35}
+.note .nh{display:flex;align-items:baseline;gap:6px;margin-bottom:3px;font-size:15px;color:#4a5370;font-weight:600}
+.note .nh b{color:var(--ink);font-weight:800}
+.note .tone{width:9px;height:9px;border-radius:50%;flex:none;align-self:center}
+.note.good .tone{background:var(--hp-g)}.note.bad .tone{background:var(--hp-r)}.note.meh .tone{background:var(--hp-y)}
+.note .nr{margin-left:auto;font-family:var(--px);font-size:10px;color:var(--ink)}
+.unit{background:var(--night);border:2px solid var(--line);border-radius:10px;padding:12px;margin:10px 0}
+.uh{display:flex;align-items:center;justify-content:space-between}
+.uh h4{margin:0;font-size:22px;font-weight:800}
+.uh .gchip{font-size:13px;padding:7px 9px}
+.usub{font-size:15px;color:var(--muted);margin:2px 0 8px}
+.grp{display:grid;grid-template-columns:1fr auto 48px;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line);font-size:17px;font-weight:600}
+.grp .gv{font-weight:800;font-variant-numeric:tabular-nums}.grp small{color:var(--muted);font-weight:600}
+.grp .gchip{justify-self:end}
+.sw{font-size:16px;margin:8px 0 4px}
+details{margin-top:8px}
+summary{cursor:pointer;font-size:16px;font-weight:700;color:var(--gold);padding:4px 0}
+.modal .menu-btn{display:block;width:100%;text-align:left;padding:14px;margin:8px 0;border-radius:8px;background:var(--paper);color:var(--ink);border:3px solid var(--ink);font-family:var(--px);font-size:10px}
+.modal .menu-btn::before{content:"▶ ";color:var(--red)}
+.modal .menu-btn[hidden]{display:none}
+
+.card-ov{align-items:center;background:rgba(6,10,20,.94)}
+.cardwrap{width:100%;max-width:430px;padding:10px;max-height:100vh;overflow:auto}
+#card{background:var(--night);border:3px solid var(--line);border-radius:12px;padding:12px 10px 10px;
+  background-image:radial-gradient(120% 50% at 50% 0%,#23345f 0%,var(--night) 70%)}
+.cardhead{text-align:center}
+.clogo{font-family:var(--px);font-size:11px;color:var(--paper);text-shadow:2px 2px 0 var(--red-d);letter-spacing:1px}
+.crec{font-family:var(--px);font-size:38px;line-height:1;margin:10px 0 6px;color:var(--paper);text-shadow:4px 4px 0 var(--red-d)}
+.cfin{display:inline-block;font-weight:800;font-size:14px;letter-spacing:.5px;color:var(--hp-g)}
+.cfin.champ{color:var(--gold)}.cfin.out{color:var(--hp-r)}
+.cgrades{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:10px 0}
+.cgrades div{background:var(--night2);border:2px solid var(--line);border-radius:8px;padding:6px 2px;display:flex;flex-direction:column;align-items:center;gap:4px}
+.cgrades b{font-family:var(--px);font-size:11px;color:var(--ink);border-radius:4px;padding:4px 5px;min-width:30px}
+.cgrades span{font-size:12px;font-weight:700;color:var(--muted)}
+.cfield{border-radius:8px;padding:6px 3px;border:2px solid #e8efe9;background:repeating-linear-gradient(180deg,var(--turf1) 0 30px,var(--turf2) 30px 60px)}
+.crow{display:flex;justify-content:center;gap:3px;margin:3px 0}
+.crow.spread{justify-content:space-around}.crow.wide{justify-content:space-between}
+.clos{height:2px;margin:5px 2px;background:repeating-linear-gradient(90deg,var(--gold) 0 8px,transparent 8px 12px)}
+.ct{position:relative;width:calc((100% - 15px)/6);max-width:68px;height:38px;background:var(--night);border-radius:4px;overflow:hidden;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;padding:5px 2px 1px}
+.ct::before{content:"";position:absolute;left:0;right:0;top:0;height:4px;background:linear-gradient(90deg,var(--t1) 0 50%,var(--t2) 50% 100%)}
+.cn{font-weight:700;font-size:10.5px;line-height:1;color:var(--paper);width:100%;text-align:center;white-space:nowrap;overflow:hidden}
+.cp{font-size:9.5px;font-weight:700;color:var(--muted);margin-top:2px}
+.cp{display:flex;align-items:center;gap:3px}.cr{font-style:normal;font-size:9px;font-weight:800;color:var(--ink);border-radius:2px;padding:0 3px;line-height:12px}
+.cst{margin-top:6px;background:var(--night2);border:2px solid var(--line);border-radius:8px;padding:2px 3px}
+.cst .ct{width:30%;max-width:110px}
+.cfoot{text-align:center;font-size:13px;font-weight:700;color:var(--muted);margin-top:8px}
+.cardbtns{display:flex;gap:8px;margin-top:10px}
+/* art (optional: art/001.png … art/151.png) */
+.dart{float:right;width:72px;height:72px;object-fit:contain;margin:-4px -4px 0 8px;image-rendering:auto}
+.dart.shiny-art{filter:drop-shadow(0 0 6px rgba(245,183,0,.9))}
+.fart,.cart{display:block;object-fit:contain;flex:none}
+.fart{width:30px;height:30px;margin-top:-2px}
+.cart{width:20px;height:20px;margin-bottom:1px}
+body.art-on .slot.filled{height:76px}
+body.art-on .ct{height:52px}
+@media(min-width:560px){
+  :root{--rh:54px}
+  .slot{height:64px}.slot .pos{font-size:17px}.slot .nm{font-size:14px}
+  .ri{font-size:11px}.dialog .line{font-size:11px}.logo{font-size:18px}
+}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">GRIDIRON 151<small>Spin a Pokémon, place it, chase 17–0.</small></div>
+  <div class="hdr">
+    <span class="count" id="pickCount">1/25</span>
+    <button class="icon" id="btnHelp" aria-label="How to play">?</button>
+    <button class="icon" id="btnMenu" aria-label="Menu">≡</button>
+  </div>
+</header>
+<main>
+  <section class="field" id="field">
+    <div class="side">
+      <div class="unit-tag">DEFENSE</div>
+      <div class="row spread" data-row="d1"></div>
+      <div class="row" data-row="d2"></div>
+      <div class="row" data-row="d3"></div>
+    </div>
+    <div class="los"></div>
+    <div class="side">
+      <div class="row" data-row="o1"></div>
+      <div class="row wide" data-row="o2"></div>
+      <div class="row" data-row="o3"></div>
+      <div class="row" data-row="o4"></div>
+      <div class="unit-tag">OFFENSE</div>
+    </div>
+  </section>
+  <section class="st-wrap">
+    <div class="unit-tag">SPECIAL TEAMS</div>
+    <div class="row spread" data-row="st"></div>
+  </section>
+</main>
+
+<div class="sheet" id="sheet"><div class="sheet-in">
+  <div class="machine">
+    <div class="reels">
+      <div class="reel" id="reel-type" aria-label="Type reel"><div class="strip"></div></div>
+      <div class="reel" id="reel-stage" aria-label="Evolution reel"><div class="strip"></div></div>
+      <div class="reel" id="reel-poke" aria-label="Pokémon reel"><div class="strip"></div></div>
+    </div>
+    <div class="respins">
+      <button class="rs" data-r="type">Type <b>5</b></button>
+      <button class="rs" data-r="stage">Evolution <b>5</b></button>
+      <button class="rs" data-r="poke">Pokémon <b>5</b></button>
+    </div>
+  </div>
+  <div class="dialog" id="info" aria-live="polite"></div>
+  <button class="action" id="action">SPIN</button>
+</div></div>
+
+<div class="overlay" id="ov-results" hidden><div class="modal" id="results"></div></div>
+<div class="overlay" id="ov-help" hidden><div class="modal" id="help"></div></div>
+<div class="overlay" id="ov-menu" hidden><div class="modal">
+  <button class="mclose" data-close aria-label="Close">×</button>
+  <h2>MENU</h2>
+  <button class="menu-btn" id="btnShowResults" hidden>SEASON REPORT</button>
+  <button class="menu-btn" id="btnHelp2">HOW TO PLAY</button>
+  <button class="menu-btn" id="btnNew">NEW GAME</button>
+</div></div>
+<div class="overlay card-ov" id="ov-card" hidden>
+  <div class="cardwrap"><div id="card"></div>
+    <div class="cardbtns"><button class="btn" id="btnCardBack">Back to report</button><button class="btn pri" id="btnSaveCard">Save image</button></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ENGINE START
+const RAW = `1|Bulbasaur|Grass|Poison|1|45|49|49|65|45
+2|Ivysaur|Grass|Poison|2|60|62|63|80|60
+3|Venusaur|Grass|Poison|3|80|82|83|100|80
+4|Charmander|Fire||1|39|52|43|50|65
+5|Charmeleon|Fire||2|58|64|58|65|80
+6|Charizard|Fire|Flying|3|78|84|78|85|100
+7|Squirtle|Water||1|44|48|65|50|43
+8|Wartortle|Water||2|59|63|80|65|58
+9|Blastoise|Water||3|79|83|100|85|78
+10|Caterpie|Bug||1|45|30|35|20|45
+11|Metapod|Bug||2|50|20|55|25|30
+12|Butterfree|Bug|Flying|3|60|45|50|80|70
+13|Weedle|Bug|Poison|1|40|35|30|20|50
+14|Kakuna|Bug|Poison|2|45|25|50|25|35
+15|Beedrill|Bug|Poison|3|65|80|40|45|75
+16|Pidgey|Normal|Flying|1|40|45|40|35|56
+17|Pidgeotto|Normal|Flying|2|63|60|55|50|71
+18|Pidgeot|Normal|Flying|3|83|80|75|70|91
+19|Rattata|Normal||1|30|56|35|25|72
+20|Raticate|Normal||2|55|81|60|50|97
+21|Spearow|Normal|Flying|1|40|60|30|31|70
+22|Fearow|Normal|Flying|2|65|90|65|61|100
+23|Ekans|Poison||1|35|60|44|40|55
+24|Arbok|Poison||2|60|85|69|65|80
+25|Pikachu|Electric||1|35|55|30|50|90
+26|Raichu|Electric||2|60|90|55|90|100
+27|Sandshrew|Ground||1|50|75|85|30|40
+28|Sandslash|Ground||2|75|100|110|55|65
+29|Nidoran♀|Poison||1|55|47|52|40|41
+30|Nidorina|Poison||2|70|62|67|55|56
+31|Nidoqueen|Poison|Ground|3|90|82|87|75|76
+32|Nidoran♂|Poison||1|46|57|40|40|50
+33|Nidorino|Poison||2|61|72|57|55|65
+34|Nidoking|Poison|Ground|3|81|92|77|75|85
+35|Clefairy|Normal||1|70|45|48|60|35
+36|Clefable|Normal||2|95|70|73|85|60
+37|Vulpix|Fire||1|38|41|40|65|65
+38|Ninetales|Fire||2|73|76|75|100|100
+39|Jigglypuff|Normal||1|115|45|20|25|20
+40|Wigglytuff|Normal||2|140|70|45|50|45
+41|Zubat|Poison|Flying|1|40|45|35|40|55
+42|Golbat|Poison|Flying|2|75|80|70|75|90
+43|Oddish|Grass|Poison|1|45|50|55|75|30
+44|Gloom|Grass|Poison|2|60|65|70|85|40
+45|Vileplume|Grass|Poison|3|75|80|85|100|50
+46|Paras|Bug|Grass|1|35|70|55|55|25
+47|Parasect|Bug|Grass|2|60|95|80|80|30
+48|Venonat|Bug|Poison|1|60|55|50|40|45
+49|Venomoth|Bug|Poison|2|70|65|60|90|90
+50|Diglett|Ground||1|10|55|25|45|95
+51|Dugtrio|Ground||2|35|80|50|70|120
+52|Meowth|Normal||1|40|45|35|40|90
+53|Persian|Normal||2|65|70|60|65|115
+54|Psyduck|Water||1|50|52|48|50|55
+55|Golduck|Water||2|80|82|78|80|85
+56|Mankey|Fighting||1|40|80|35|35|70
+57|Primeape|Fighting||2|65|105|60|60|95
+58|Growlithe|Fire||1|55|70|45|50|60
+59|Arcanine|Fire||2|90|110|80|80|95
+60|Poliwag|Water||1|40|50|40|40|90
+61|Poliwhirl|Water||2|65|65|65|50|90
+62|Poliwrath|Water|Fighting|3|90|85|95|70|70
+63|Abra|Psychic||1|25|20|15|105|90
+64|Kadabra|Psychic||2|40|35|30|120|105
+65|Alakazam|Psychic||3|55|50|45|135|120
+66|Machop|Fighting||1|70|80|50|35|35
+67|Machoke|Fighting||2|80|100|70|50|45
+68|Machamp|Fighting||3|90|130|80|65|55
+69|Bellsprout|Grass|Poison|1|50|75|35|70|40
+70|Weepinbell|Grass|Poison|2|65|90|50|85|55
+71|Victreebel|Grass|Poison|3|80|105|65|100|70
+72|Tentacool|Water|Poison|1|40|40|35|100|70
+73|Tentacruel|Water|Poison|2|80|70|65|120|100
+74|Geodude|Rock|Ground|1|40|80|100|30|20
+75|Graveler|Rock|Ground|2|55|95|115|45|35
+76|Golem|Rock|Ground|3|80|110|130|55|45
+77|Ponyta|Fire||1|50|85|55|65|90
+78|Rapidash|Fire||2|65|100|70|80|105
+79|Slowpoke|Water|Psychic|1|90|65|65|40|15
+80|Slowbro|Water|Psychic|2|95|75|110|80|30
+81|Magnemite|Electric||1|25|35|70|95|45
+82|Magneton|Electric||2|50|60|95|120|70
+83|Farfetch'd|Normal|Flying|1|52|65|55|58|60
+84|Doduo|Normal|Flying|1|35|85|45|35|75
+85|Dodrio|Normal|Flying|2|60|110|70|60|100
+86|Seel|Water||1|65|45|55|70|45
+87|Dewgong|Water|Ice|2|90|70|80|95|70
+88|Grimer|Poison||1|80|80|50|40|25
+89|Muk|Poison||2|105|105|75|65|50
+90|Shellder|Water||1|30|65|100|45|40
+91|Cloyster|Water|Ice|2|50|95|180|85|70
+92|Gastly|Ghost|Poison|1|30|35|30|100|80
+93|Haunter|Ghost|Poison|2|45|50|45|115|95
+94|Gengar|Ghost|Poison|3|60|65|60|130|110
+95|Onix|Rock|Ground|1|35|45|160|30|70
+96|Drowzee|Psychic||1|60|48|45|90|42
+97|Hypno|Psychic||2|85|73|70|115|67
+98|Krabby|Water||1|30|105|90|25|50
+99|Kingler|Water||2|55|130|115|50|75
+100|Voltorb|Electric||1|40|30|50|55|100
+101|Electrode|Electric||2|60|50|70|80|140
+102|Exeggcute|Grass|Psychic|1|60|40|80|60|40
+103|Exeggutor|Grass|Psychic|2|95|95|85|125|55
+104|Cubone|Ground||1|50|50|95|40|35
+105|Marowak|Ground||2|60|80|110|50|45
+106|Hitmonlee|Fighting||1|50|120|53|35|87
+107|Hitmonchan|Fighting||1|50|105|79|35|76
+108|Lickitung|Normal||1|90|55|75|60|30
+109|Koffing|Poison||1|40|65|95|60|35
+110|Weezing|Poison||2|65|90|120|85|60
+111|Rhyhorn|Ground|Rock|1|80|85|95|30|25
+112|Rhydon|Ground|Rock|2|105|130|120|45|40
+113|Chansey|Normal||1|250|5|5|105|50
+114|Tangela|Grass||1|65|55|115|100|60
+115|Kangaskhan|Normal||1|105|95|80|40|90
+116|Horsea|Water||1|30|40|70|70|60
+117|Seadra|Water||2|55|65|95|95|85
+118|Goldeen|Water||1|45|67|60|50|63
+119|Seaking|Water||2|80|92|65|80|68
+120|Staryu|Water||1|30|45|55|70|85
+121|Starmie|Water|Psychic|2|60|75|85|100|115
+122|Mr. Mime|Psychic||1|40|45|65|100|90
+123|Scyther|Bug|Flying|1|70|110|80|55|105
+124|Jynx|Ice|Psychic|1|65|50|35|95|95
+125|Electabuzz|Electric||1|65|83|57|85|105
+126|Magmar|Fire||1|65|95|57|85|93
+127|Pinsir|Bug||1|65|125|100|55|85
+128|Tauros|Normal||1|75|100|95|70|110
+129|Magikarp|Water||1|20|10|55|20|80
+130|Gyarados|Water|Flying|2|95|125|79|100|81
+131|Lapras|Water|Ice|1|130|85|80|95|60
+132|Ditto|Normal||1|48|48|48|48|48
+133|Eevee|Normal||1|55|55|50|65|55
+134|Vaporeon|Water||2|130|65|60|110|65
+135|Jolteon|Electric||2|65|65|60|110|130
+136|Flareon|Fire||2|65|130|60|110|65
+137|Porygon|Normal||1|65|60|70|75|40
+138|Omanyte|Rock|Water|1|35|40|100|90|35
+139|Omastar|Rock|Water|2|70|60|125|115|55
+140|Kabuto|Rock|Water|1|30|80|90|45|55
+141|Kabutops|Rock|Water|2|60|115|105|70|80
+142|Aerodactyl|Rock|Flying|1|80|105|65|60|130
+143|Snorlax|Normal||1|160|110|65|65|30
+144|Articuno|Ice|Flying|L|90|85|100|125|85
+145|Zapdos|Electric|Flying|L|90|90|85|125|100
+146|Moltres|Fire|Flying|L|90|100|90|125|90
+147|Dratini|Dragon||1|41|64|45|50|50
+148|Dragonair|Dragon||2|61|84|65|70|70
+149|Dragonite|Dragon|Flying|3|91|134|95|100|80
+150|Mewtwo|Psychic||L|106|110|90|154|130
+151|Mew|Psychic||L|100|100|100|100|100`;
+
+const DEX = RAW.trim().split('\n').map(l => {
+  const [d, n, t1, t2, s, hp, atk, def, spc, spe] = l.split('|');
+  return { dex: +d, name: n, types: t2 ? [t1, t2] : [t1], stage: s, hp: +hp, atk: +atk, def: +def, spc: +spc, spe: +spe };
+});
+
+const TYPES = {
+  Normal:   { c: '#A8A878', e: '⚪' }, Fire:    { c: '#F08030', e: '🔥' }, Water:  { c: '#6890F0', e: '💧' },
+  Grass:    { c: '#78C850', e: '🌿' }, Electric:{ c: '#F8D030', e: '⚡' }, Ice:    { c: '#98D8D8', e: '❄️' },
+  Fighting: { c: '#C03028', e: '🥊' }, Poison:  { c: '#A040A0', e: '☠️' }, Ground: { c: '#E0C068', e: '⛰️' },
+  Flying:   { c: '#A890F0', e: '🪶' }, Psychic: { c: '#F85888', e: '🔮' }, Bug:    { c: '#A8B820', e: '🐛' },
+  Rock:     { c: '#B8A038', e: '🪨' }, Ghost:   { c: '#705898', e: '👻' }, Dragon: { c: '#7038F8', e: '🐉' },
+};
+const TYPE_LIST = Object.keys(TYPES);
+const STAGES = ['1', '2', '3', 'L'];
+const STAGE_WEIGHT = { '1': 40, '2': 35, '3': 20, 'L': 5 };
+const STAGE_LABEL = { '1': 'Stage 1', '2': 'Stage 2', '3': 'Stage 3', 'L': 'Legendary' };
+const SHINY_ODDS = 1 / 15, SHINY_BONUS = 5;
+
+// Position formulas: weights on Gen 1 base stats (HP capped at 150 so Chansey isn't an All-Pro tackle)
+const FORMULAS = {
+  QB:  { label: 'Quarterback',     w: { spc: .50, spe: .20, hp: .15, atk: .15 }, why: 'Special = vision & arm; Speed = escapability' },
+  RB:  { label: 'Running Back',    w: { spe: .40, atk: .35, hp: .25 },           why: 'Burst, power, durability' },
+  FB:  { label: 'Fullback',        w: { atk: .35, def: .35, hp: .30 },           why: 'Lead blocker' },
+  WR:  { label: 'Wide Receiver',   w: { spe: .60, atk: .20, spc: .20 },          why: 'Separation first' },
+  TE:  { label: 'Tight End',       w: { atk: .30, def: .25, spe: .25, hp: .20 }, why: 'Half blocker, half receiver' },
+  OT:  { label: 'Offensive Tackle',w: { def: .45, hp: .35, spe: .20 },           why: 'Anchor + footwork vs. edge rushers' },
+  OG:  { label: 'Offensive Guard', w: { def: .45, hp: .35, atk: .20 },           why: 'Anchor + drive blocking' },
+  C:   { label: 'Center',          w: { def: .40, hp: .30, atk: .15, spc: .15 }, why: 'Anchor + line calls' },
+  DE:  { label: 'Defensive End',   w: { atk: .45, spe: .35, hp: .20 },           why: 'Pass rush' },
+  NT:  { label: 'Nose Tackle',     w: { def: .40, hp: .40, atk: .20 },           why: 'Eat double teams' },
+  OLB: { label: 'Outside LB',      w: { spe: .40, atk: .35, def: .25 },          why: 'Edge speed + hitting' },
+  ILB: { label: 'Inside LB',       w: { atk: .40, def: .30, hp: .20, spc: .10 }, why: 'Tackling + reading plays' },
+  CB:  { label: 'Cornerback',      w: { spe: .60, def: .20, spc: .20 },          why: 'Keep up with WRs' },
+  S:   { label: 'Safety',          w: { spe: .40, spc: .30, def: .20, atk: .10 },why: 'Range + reading the QB' },
+  K:   { label: 'Kicker',          w: { spc: .55, atk: .45 },                    why: 'Accuracy + leg' },
+  P:   { label: 'Punter',          w: { atk: .40, spc: .40, hp: .20 },           why: 'Leg + touch' },
+  KR:  { label: 'Kick/Punt Return',w: { spe: .75, hp: .25 },                     why: 'Pure speed' },
+  SLOT:{ label: 'Slot Receiver',   w: { spe: .55, spc: .25, atk: .20 },          why: 'Quickness in tight space' },
+};
+
+const SLOTS = [
+  { id: 'S1', pos: 'S', f: 'S', imp: 1.0, row: 'd1' }, { id: 'S2', pos: 'S', f: 'S', imp: 1.0, row: 'd1' },
+  { id: 'CB1', pos: 'CB', f: 'CB', imp: 1.1, row: 'd2' }, { id: 'OLB1', pos: 'OLB', f: 'OLB', imp: 1.0, row: 'd2' },
+  { id: 'ILB1', pos: 'ILB', f: 'ILB', imp: 1.0, row: 'd2' }, { id: 'ILB2', pos: 'ILB', f: 'ILB', imp: 1.0, row: 'd2' },
+  { id: 'OLB2', pos: 'OLB', f: 'OLB', imp: 1.0, row: 'd2' }, { id: 'CB2', pos: 'CB', f: 'CB', imp: 1.1, row: 'd2' },
+  { id: 'DE1', pos: 'DE', f: 'DE', imp: 1.2, row: 'd3' }, { id: 'NT', pos: 'NT', f: 'NT', imp: 1.0, row: 'd3' },
+  { id: 'DE2', pos: 'DE', f: 'DE', imp: 1.2, row: 'd3' },
+  { id: 'LT', pos: 'LT', f: 'OT', imp: 1.2, row: 'o1' }, { id: 'LG', pos: 'LG', f: 'OG', imp: 0.9, row: 'o1' },
+  { id: 'C', pos: 'C', f: 'C', imp: 1.0, row: 'o1' }, { id: 'RG', pos: 'RG', f: 'OG', imp: 0.9, row: 'o1' },
+  { id: 'RT', pos: 'RT', f: 'OT', imp: 1.0, row: 'o1' }, { id: 'TE', pos: 'TE', f: 'TE', imp: 0.9, row: 'o1' },
+  { id: 'WR1', pos: 'WR', f: 'WR', imp: 1.1, row: 'o2' }, { id: 'QB', pos: 'QB', f: 'QB', imp: 1.6, row: 'o2' },
+  { id: 'SLOT', pos: 'SLOT', f: 'SLOT', imp: 1.0, row: 'o2' },
+  { id: 'FB', pos: 'FB', f: 'FB', imp: 0.6, row: 'o3' }, { id: 'RB', pos: 'RB', f: 'RB', imp: 1.0, row: 'o4' },
+  { id: 'K', pos: 'K', f: 'K', imp: 0.5, row: 'st' }, { id: 'P', pos: 'P', f: 'P', imp: 0.4, row: 'st' },
+  { id: 'KR', pos: 'KR/PR', f: 'KR', imp: 0.5, row: 'st' },
+];
+const SLOT_BY_ID = Object.fromEntries(SLOTS.map(s => [s.id, s]));
+const IMP_SUM = SLOTS.reduce((a, s) => a + s.imp, 0);
+
+function rawScore(p, f) {
+  const s = { hp: Math.min(p.hp, 150), atk: p.atk, def: p.def, spc: p.spc, spe: p.spe };
+  let r = 0; for (const k in f.w) r += s[k] * f.w[k]; return r;
+}
+const RATING = {};
+for (const key in FORMULAS) {
+  const vals = DEX.map(p => rawScore(p, FORMULAS[key]));
+  const mean = vals.reduce((a, b) => a + b, 0) / vals.length;
+  const sd = Math.sqrt(vals.reduce((a, b) => a + (b - mean) ** 2, 0) / vals.length);
+  const kp = key === 'K' || key === 'P' ? -6 : 0; // stats alone overrate big hitters as kickers
+  RATING[key] = vals.map(v => Math.max(20, Math.min(99, Math.round(60 + 16 * (v - mean) / sd) + kp)));
+}
+
+// ---------- Hand-tuned ratings (designer overrides) ----------
+// Explicit position numbers win. cap = max for any position not listed. floor = min for any position not listed.
+// shift = add to every stat-based rating first. OL = OT+OG+C, LB = OLB+ILB, DL = DE+NT.
+const OVERRIDES = {
+  'Pidgey': { CB: 52, S: 50 }, 'Pidgeotto': { CB: 66, S: 64 }, 'Pidgeot': { CB: 80, S: 78, RB: 80 },
+  'Rattata': { cap: 45, OLB: 47 }, 'Raticate': { cap: 60, OLB: 65 },
+  'Spearow': { DE: 55, RB: 50, FB: 45, KR: 50 }, 'Fearow': { DE: 80, RB: 75, FB: 65, KR: 68 },
+  'Clefairy': { NT: 52, OT: 50, cap: 48 }, 'Clefable': { NT: 70, OT: 68, cap: 65 },
+  'Jigglypuff': { NT: 55, OT: 50, cap: 48 }, 'Wigglytuff': { NT: 70, OT: 67, cap: 64 },
+  'Meowth': { WR: 62, CB: 62, S: 55 }, 'Persian': { KR: 87, WR: 85, CB: 85, S: 75 },
+  "Farfetch'd": { cap: 55 },
+  'Doduo': { WR: 62, TE: 60, DE: 55, OLB: 54, RB: 50, cap: 50 }, 'Dodrio': { WR: 82, TE: 80, DE: 74, OLB: 72, RB: 68, cap: 65 },
+  'Chansey': { QB: 60 },
+  'Tauros': { OLB: 89, TE: 86, FB: 78, RB: 82 },
+  'Snorlax': { C: 99, OG: 99, NT: 95, OT: 86, FB: 65, cap: 78 },
+  'Charmander': { WR: 58, CB: 57, S: 56, RB: 55 }, 'Charmeleon': { WR: 72, CB: 71, S: 70, RB: 66 }, 'Charizard': { WR: 86, CB: 85, S: 84 },
+  'Growlithe': { RB: 66, DE: 64, WR: 62 }, 'Arcanine': { RB: 90, DE: 88 },
+  'Ponyta': { WR: 73, CB: 71, S: 69, RB: 67 }, 'Rapidash': { WR: 85, CB: 80, RB: 82 },
+  'Magmar': { QB: 70, WR: 70, RB: 73 },
+  'Eevee': { KR: 62, SLOT: 56, RB: 52 },
+  'Flareon': { KR: 85, SLOT: 84, RB: 82, WR: 74, K: 75, P: 73 },
+  'Jolteon': { KR: 96, SLOT: 92, RB: 81, WR: 80 },
+  'Vaporeon': { KR: 80, SLOT: 80, QB: 85, RB: 76, C: 55, WR: 70 },
+  'Squirtle': { FB: 52 }, 'Wartortle': { FB: 63, OT: 65, DE: 62 },
+  'Blastoise': { OT: 82, OG: 87, C: 80, DE: 68, NT: 78 },
+  'Golduck': { FB: 76, RB: 68, OT: 65 },
+  'Poliwhirl': { CB: 70, OLB: 70, ILB: 70, FB: 68 }, 'Poliwrath': { OT: 84, NT: 84, DE: 82, OG: 82 },
+  'Tentacruel': { QB: 80, CB: 83, S: 80 },
+  'Slowbro': { OG: 78, NT: 78, OT: 72, C: 74 },
+  'Dewgong': { QB: 70, OT: 78, DE: 78 },
+  'Cloyster': { OT: 95, OG: 95, C: 92, cap: 82 },
+  'Gyarados': { K: 70, P: 72, DE: 90, TE: 85, S: 80 },
+  'Bulbasaur': { QB: 65, OL: 70 }, 'Ivysaur': { QB: 72, OL: 79 }, 'Venusaur': { QB: 80, OL: 88 },
+  'Bellsprout': { K: 52, P: 50 }, 'Weepinbell': { K: 62, P: 60 }, 'Victreebel': { K: 70, P: 68 },
+  'Exeggutor': { QB: 60, OT: 83, DE: 83 },
+  'Tangela': { shift: -5 },
+  'Pikachu': { QB: 70, WR: 67 }, 'Raichu': { QB: 77, WR: 75 },
+  'Magnemite': { CB: 62, S: 62 }, 'Magneton': { CB: 75, S: 75 },
+  'Voltorb': { OL: 65, TE: 58, LB: 58 }, 'Electrode': { OL: 82, TE: 72, LB: 72 },
+  'Electabuzz': { WR: 84, TE: 82, S: 72, QB: 72 },
+  'Jynx': { TE: 65, K: 68, P: 68, cap: 55 },
+  'Articuno': { QB: 93, CB: 90, S: 87, floor: 78 },
+  'Mankey': { DE: 58, LB: 62, TE: 52 }, 'Primeape': { DE: 78, LB: 82, TE: 70 },
+  'Machop': { ILB: 68, OLB: 66, TE: 66, FB: 68, QB: 62 }, 'Machoke': { ILB: 82, OLB: 80, TE: 80, FB: 82, QB: 76 },
+  'Machamp': { ILB: 95, OLB: 92, TE: 93, FB: 95, QB: 89 },
+  'Hitmonlee': { K: 92, P: 90, WR: 72, CB: 72 }, 'Hitmonchan': { K: 86, P: 85, WR: 70, CB: 70 },
+  'Ekans': { DE: 48, OLB: 48, cap: 42 }, 'Arbok': { DE: 68, OLB: 68, cap: 58 },
+  'Nidoran♀': { DE: 58 }, 'Nidoran♂': { DE: 60 },
+  'Nidorina': { DE: 68, OT: 70, NT: 70, FB: 68 }, 'Nidorino': { DE: 70, OT: 68, NT: 68, FB: 70 },
+  'Nidoqueen': { OT: 86, NT: 86, FB: 84, DE: 80 }, 'Nidoking': { OT: 86, NT: 85, FB: 86, DE: 82 },
+  'Zubat': { cap: 45 }, 'Golbat': { cap: 60 },
+  'Sandslash': { FB: 84, DE: 82 },
+  'Diglett': { cap: 55 }, 'Dugtrio': { cap: 70 },
+  'Cubone': { DE: 62, LB: 62, FB: 62, RB: 55 }, 'Marowak': { DE: 78, LB: 78, FB: 78, RB: 70 },
+  'Rhyhorn': { FB: 86, OG: 84, OT: 81, C: 79, NT: 86, DE: 81, ILB: 83 },
+  'Rhydon': { FB: 95, OG: 93, OT: 90, C: 88, NT: 95, DE: 90, ILB: 92 },
+  'Abra': { QB: 75, CB: 68, S: 68 }, 'Kadabra': { QB: 92, CB: 78, S: 78 }, 'Alakazam': { QB: 92, CB: 85, S: 85 },
+  'Hypno': { QB: 75 },
+  'Mr. Mime': { S: 78, K: 85, cap: 60 },
+  'Mew': { RB: 92, SLOT: 93, CB: 92, floor: 85 },
+  'Mewtwo': { QB: 99, WR: 99, TE: 99, LB: 99, CB: 99, S: 99, SLOT: 99, RB: 90, DE: 90, floor: 88 },
+  'Beedrill': { QB: 70, WR: 72, DE: 75 },
+  'Paras': { cap: 45 }, 'Parasect': { cap: 60 },
+  'Venonat': { cap: 50 }, 'Venomoth': { cap: 68 },
+  'Geodude': { shift: 4, OL: 70, DE: 66 }, 'Graveler': { shift: 4, OG: 82, C: 82, OT: 78, DE: 74, NT: 80 },
+  'Golem': { shift: 4, OG: 94, C: 94, OT: 88, NT: 92 },
+  'Aerodactyl': { cap: 88 },
+  'Gastly': { LB: 64 }, 'Haunter': { LB: 76 }, 'Gengar': { OLB: 88, ILB: 86 },
+};
+const GROUP_KEYS = { OL: ['OT', 'OG', 'C'], LB: ['OLB', 'ILB'], DL: ['DE', 'NT'] };
+for (const [name, o] of Object.entries(OVERRIDES)) {
+  const i = DEX.findIndex(p => p.name === name);
+  if (i < 0) throw new Error('Unknown Pokémon in OVERRIDES: ' + name);
+  const explicit = {};
+  for (const [k, v] of Object.entries(o)) {
+    if (k in GROUP_KEYS) GROUP_KEYS[k].forEach(g => explicit[g] = v);
+    else if (FORMULAS[k]) explicit[k] = v;
+  }
+  for (const key in FORMULAS) {
+    let r = RATING[key][i] + (o.shift || 0);
+    if (o.cap != null) r = Math.min(r, o.cap);
+    if (o.floor != null) r = Math.max(r, o.floor);
+    if (key in explicit) r = explicit[key];
+    RATING[key][i] = Math.max(20, Math.min(99, r));
+  }
+}
+function rating(dex, slotId, shiny) {
+  const r = RATING[SLOT_BY_ID[slotId].f][dex - 1];
+  return shiny ? Math.min(99, r + SHINY_BONUS) : r;
+}
+function teamOVR(picks) { // picks: {slotId: {dex, shiny}}
+  let t = 0; for (const s of SLOTS) { const p = picks[s.id]; if (p) t += s.imp * rating(p.dex, s.id, p.shiny); }
+  return t / IMP_SUM;
+}
+
+// Hungarian algorithm (n rows <= m cols), minimizes cost
+function hungarian(a) {
+  const n = a.length, m = a[0].length;
+  const u = Array(n + 1).fill(0), v = Array(m + 1).fill(0), p = Array(m + 1).fill(0), way = Array(m + 1).fill(0);
+  for (let i = 1; i <= n; i++) {
+    p[0] = i; let j0 = 0; const minv = Array(m + 1).fill(Infinity), used = Array(m + 1).fill(false);
+    do {
+      used[j0] = true; const i0 = p[j0]; let delta = Infinity, j1 = 0;
+      for (let j = 1; j <= m; j++) if (!used[j]) {
+        const cur = a[i0 - 1][j - 1] - u[i0] - v[j];
+        if (cur < minv[j]) { minv[j] = cur; way[j] = j0; }
+        if (minv[j] < delta) { delta = minv[j]; j1 = j; }
+      }
+      for (let j = 0; j <= m; j++) { if (used[j]) { u[p[j]] += delta; v[j] -= delta; } else minv[j] -= delta; }
+      j0 = j1;
+    } while (p[j0] !== 0);
+    do { const j1 = way[j0]; p[j0] = p[j1]; j0 = j1; } while (j0);
+  }
+  const ans = Array(n); for (let j = 1; j <= m; j++) if (p[j]) ans[p[j] - 1] = j - 1; return ans;
+}
+const OPTIMAL = (() => {
+  const cost = SLOTS.map(s => DEX.map(p => -s.imp * rating(p.dex, s.id, false)));
+  const asg = hungarian(cost); const picks = {};
+  SLOTS.forEach((s, i) => { picks[s.id] = { dex: DEX[asg[i]].dex, shiny: false }; });
+  return { picks, ovr: teamOVR(picks) };
+})();
+
+// Seeded RNG so the same lineup always gets the same season
+function hashStr(s) { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+function mulberry32(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function gauss(rng) { let u = 0, v = 0; while (!u) u = rng(); while (!v) v = rng(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
+
+const OPPONENTS = [
+  ['Pallet Town Rookies', 27.5],
+  ['Viridian Forest Rangers', 21.5],
+  ['Pewter City Boulders', 23.5],
+  ['Cerulean Capes', 18.5],
+  ['S.S. Anne Sailors', 25.5],
+  ['Vermilion Voltage', 16.5],
+  ['Rock Tunnel Miners', 20.5],
+  ['Lavender Specters', 14.5],
+  ['Celadon Gardeners', 19.5],
+  ['Cycling Road Bikers', 17.5],
+  ['Fuchsia Ninjas', 12.5],
+  ['Safari Zone Stampede', 15.5],
+  ['Saffron Psychics', 10.5],
+  ['Seafoam Glaciers', 8.5],
+  ['Cinnabar Volcanoes', 13.5],
+  ['Victory Road Titans', 6.5],
+  ['Indigo Plateau Elite', 3.5],
+]; // [name, OVR gap below a perfect team]
+
+const PLAYOFF_ROUNDS = [ // [round, opponent, OVR gap below perfect, how a loss here reads]
+  ['Wild Card Weekend', 'Silph Co. Executives', 12, 'Lost on Wild Card Weekend'],
+  ['Divisional Round', 'Team Rocket Elite', 9, 'Lost in the Divisional Round'],
+  ['Championship Sunday', 'Elite Four All-Stars', 7, 'Lost on Championship Sunday'],
+  ['Indigo Bowl', "Johto Conference Champs", 5, 'Lost the Indigo Bowl'],
+];
+function oppSeed(i, s) { // NFL-style: 2v7, 3v6, 4v5; #1 gets the lowest seed left
+  if (i === 0) return 9 - s;
+  if (i === 1) return s === 1 ? 6 : s === 2 ? 3 : s === 3 ? 2 : 1;
+  if (i === 2) return s === 1 ? 2 : 1;
+  return 1;
+}
+function playGame(ovr, opp, rng, perfect) {
+  let m = (ovr - opp) * 1.8 + gauss(rng) * 7;
+  if (perfect) m = Math.max(3, Math.abs(m));
+  let diff = Math.round(m); if (diff === 0) diff = m >= 0 ? 1 : -1;
+  const base = 10 + Math.round(rng() * 17);
+  return { us: diff > 0 ? base + diff : base, them: diff > 0 ? base : base - diff, win: diff > 0 };
+}
+function seedFor(wins) { return wins >= 14 ? 1 : wins === 13 ? 2 : wins === 12 ? 3 : wins === 11 ? 5 : wins === 10 ? 7 : 0; }
+
+function simulateSeason(picks) {
+  const ovr = teamOVR(picks), perfect = ovr >= OPTIMAL.ovr - 1e-9;
+  const key = SLOTS.map(s => picks[s.id] ? picks[s.id].dex + (picks[s.id].shiny ? 's' : '') : '0').join('-');
+  const rng = mulberry32(hashStr(key));
+  const games = OPPONENTS.map(([name, gap], i) => {
+    const opp = OPTIMAL.ovr - gap;
+    return Object.assign({ week: i + 1, name, opp }, playGame(ovr, opp, rng, perfect));
+  });
+  const wins = games.filter(g => g.win).length;
+  const pct = ovr / OPTIMAL.ovr;
+  // Playoffs: 10+ wins gets in. 14+ wins = #1 seed and a first-round bye.
+  const seed = seedFor(wins), playoffs = [];
+  let finish = 'Missed the playoffs', champ = false;
+  if (seed) {
+    finish = null;
+    for (let i = 0; i < PLAYOFF_ROUNDS.length; i++) {
+      const [round, name, gap, lossTxt] = PLAYOFF_ROUNDS[i];
+      if (i === 0 && seed === 1) { playoffs.push({ round, bye: true }); continue; }
+      const opp = OPTIMAL.ovr - gap, g = playGame(ovr, opp, rng, perfect);
+      playoffs.push(Object.assign({ round, name, opp, oppSeed: oppSeed(i, seed) }, g));
+      if (!g.win) { finish = lossTxt; break; }
+    }
+    if (!finish) { finish = 'Indigo Bowl Champions'; champ = true; }
+  }
+  return { ovr, pct, perfect, wins, losses: 17 - wins, games, seed, playoffs, finish, champ, grade: gradeFor(pct, perfect) };
+}
+function gradeFor(pct, perfect) {
+  if (perfect) return 'S';
+  const g = [[.96, 'A+'], [.93, 'A'], [.90, 'A-'], [.87, 'B+'], [.84, 'B'], [.80, 'B-'], [.77, 'C+'], [.74, 'C'], [.71, 'C-'], [.67, 'D']];
+  for (const [t, l] of g) if (pct >= t) return l; return 'F';
+}
+
+// ---------- Season report: unit + position group grades ----------
+const UNITS = [
+  { name: 'Offense', groups: [['Quarterback', ['QB']], ['Backfield', ['RB', 'FB']], ['Receivers', ['WR1', 'SLOT', 'TE']], ['Offensive Line', ['LT', 'LG', 'C', 'RG', 'RT']]] },
+  { name: 'Defense', groups: [['Defensive Line', ['DE1', 'NT', 'DE2']], ['Linebackers', ['OLB1', 'ILB1', 'ILB2', 'OLB2']], ['Secondary', ['CB1', 'CB2', 'S1', 'S2']]] },
+  { name: 'Special Teams', groups: [['Kicker', ['K']], ['Punter', ['P']], ['Returner', ['KR']]] },
+];
+function groupScore(picks, ids) {
+  let mine = 0, best = 0, w = 0;
+  for (const id of ids) {
+    const s = SLOT_BY_ID[id], p = picks[id], o = OPTIMAL.picks[id];
+    mine += s.imp * rating(p.dex, id, p.shiny); best += s.imp * rating(o.dex, id, false); w += s.imp;
+  }
+  const pct = mine / best;
+  return { avg: mine / w, best: best / w, pct, grade: pct >= 1 ? 'A+' : gradeFor(pct, false) };
+}
+function unitReport(picks) {
+  return UNITS.map(u => {
+    const groups = u.groups.map(([name, ids]) => Object.assign({ name, ids }, groupScore(picks, ids)));
+    const all = groupScore(picks, u.groups.flatMap(g => g[1]));
+    const sorted = [...groups].sort((a, b) => b.pct - a.pct);
+    return Object.assign({ name: u.name, groups, strength: sorted[0], weakness: sorted[sorted.length - 1] }, all);
+  });
+}
+
+// ---------- Scouting notes: why each placement worked (or didn't) ----------
+function bestFit(dex) {
+  let best = null;
+  for (const s of SLOTS) { const r = rating(dex, s.id, false); if (!best || r > best.r) best = { pos: s.pos, id: s.id, r }; }
+  return best;
+}
+const OL = ['OT', 'OG', 'C'], DL = ['DE', 'NT'], SPEEDY = ['WR', 'SLOT', 'CB', 'KR', 'RB', 'S'], BIG = ['OT', 'OG', 'C', 'NT', 'FB'];
+const SPECIAL = {
+  'Magikarp': f => 'Used Splash. Nothing happened. Every single snap.',
+  'Ditto': f => 'Transformed into whoever lined up across from him. Somehow still perfectly average.',
+  'Chansey': f => BIG.includes(f) || DL.includes(f) ? '250 HP and 5 Defense. Survives every hit, stops none of them.' : '250 HP, 5 Attack. Elite at not getting hurt, terrible at football.',
+  'Snorlax': f => BIG.includes(f) || DL.includes(f) ? 'Fell asleep over the ball. Nobody could move him anyway.' : SPEEDY.includes(f) ? `Snorlax at ${f}. Asleep before the first route.` : 'Blocked the path, like Snorlax always does.',
+  'Slowpoke': f => SPEEDY.includes(f) || f === 'QB' ? 'Got to the ball… about three plays later.' : 'Takes a while to react, but 90 HP keeps him upright.',
+  'Slowbro': f => SPEEDY.includes(f) ? 'Ran routes with a Shellder chewing his tail. Not fast.' : null,
+  'Machamp': f => ['WR', 'SLOT', 'TE'].includes(f) ? 'Four arms. No ball is uncatchable.' : OL.includes(f) ? 'Four arms means four hands to hold with, and the refs only see two.' : 'Four arms, 130 Attack. Tackles two ball carriers at once.',
+  'Hitmonlee': f => ['K', 'P'].includes(f) ? 'Literally a pair of legs. Born to kick.' : 'Hi Jump Kick is technically a penalty here.',
+  'Hitmonchan': f => OL.includes(f) || DL.includes(f) ? 'Hand-fighting champion. Rushers got jabbed at the line.' : null,
+  'Abra': f => f === 'KR' ? 'Teleported to the end zone. Twice.' : f === 'QB' ? 'Brilliant mind, but sleeps 18 hours a day. Missed film sessions.' : null,
+  'Alakazam': f => f === 'QB' ? 'IQ of 5,000. Reads the defense before they break the huddle.' : null,
+  'Electrode': f => SPEEDY.includes(f) ? 'Fastest thing in Kanto. Just pray he never Self-Destructs at the 1.' : 'Explodes on contact. The training staff is nervous.',
+  'Voltorb': f => 'A Poké Ball with a temper. Fumble risk: extreme.',
+  'Onix': f => BIG.includes(f) || DL.includes(f) ? 'A 29-foot rock snake. Rushers had to go around… and around.' : null,
+  'Geodude': f => BIG.includes(f) ? 'A literal rock with arms. Immovable.' : SPEEDY.includes(f) ? 'Rolls downhill fast but cannot change direction.' : null,
+  'Golem': f => BIG.includes(f) ? 'A boulder in pads. Bull rushes go nowhere.' : SPEEDY.includes(f) ? 'Rolls downhill fast but cannot change direction.' : null,
+  'Jigglypuff': f => 'Sang a lullaby before the snap. Half the defense dozed off. So did his own team.',
+  'Wigglytuff': f => BIG.includes(f) ? 'Inflates to fill the gap. Surprisingly effective, mostly air.' : null,
+  'Psyduck': f => 'Permanent headache. Thinks the playbook is upside down.',
+  "Farfetch'd": f => 'Showed up with a leek instead of a helmet.',
+  'Kangaskhan': f => ['RB', 'FB'].includes(f) ? 'Carries the ball in its pouch. Fumbles: zero.' : 'Brought the kid to every game. Great locker room presence.',
+  'Diglett': f => 'Went under the defense. Literally. Only his head was ever tackleable.',
+  'Dugtrio': f => ['RB', 'KR'].includes(f) ? 'Three heads, tunnels under the line. Defenses never know which one has the ball.' : null,
+  'Mewtwo': f => 'Genetically engineered for football. Borderline unfair.',
+  'Mew': f => 'Knows every move in the game, including every route in the playbook.',
+  'Gengar': f => ['CB', 'S'].includes(f) ? 'Phases through blockers like they are not there.' : null,
+  'Gastly': f => 'Mostly gas. Tackling him is like grabbing smoke.',
+  'Gyarados': f => DL.includes(f) || f === 'OLB' ? 'Hyper Beam off the edge. QBs panic.' : null,
+  'Dragonite': f => ['QB', 'RB', 'FB'].includes(f) ? 'Just flies over the line on short yardage. Unstoppable sneak.' : null,
+  'Cloyster': f => BIG.includes(f) ? '180 Defense. A clamshell with a jersey.' : null,
+  'Rhydon': f => DL.includes(f) || f === 'ILB' || f === 'FB' ? 'Drill horn first through the A-gap.' : null,
+  'Tauros': f => ['OLB', 'ILB', 'RB', 'DE'].includes(f) ? 'Literally a bull. Running into people is the whole job.' : null,
+  'Arcanine': f => ['RB', 'KR', 'WR', 'SLOT'].includes(f) ? 'Legendary-tier speed hiding in a regular roster spot.' : null,
+  'Persian': f => ['CB', 'S'].includes(f) ? 'Pay Day: picked it off and took it back for six.' : null,
+  'Meowth': f => 'Mostly here for the paycheck. Pay Day, you know.',
+  'Lapras': f => BIG.includes(f) ? 'Carries the entire line on its back, like it carries trainers.' : null,
+  'Metapod': f => 'Used Harden. Used Harden. Used Harden.',
+  'Kakuna': f => 'Used Harden. Did not move for four quarters.',
+  'Caterpie': f => 'A caterpillar on a pro football field. Brave, honestly.',
+  'Weedle': f => 'Poison Sting is not a legal tackle.',
+  'Aerodactyl': f => SPEEDY.includes(f) || f === 'DE' ? 'Prehistoric speed. Revived from a fossil to burn corners.' : null,
+  'Scyther': f => ['CB', 'S', 'OLB'].includes(f) ? 'Blades for hands. Pass breakups come standard.' : null,
+  'Pikachu': f => 'Jersey sales went through the roof. On-field results vary.',
+  'Eevee': f => 'Has not evolved yet. Neither has his game.',
+  'Exeggutor': f => ['K', 'P'].includes(f) ? 'Three heads, three angles on every kick.' : null,
+  'Starmie': f => SPEEDY.includes(f) ? 'Spins through traffic. Never runs in a straight line.' : null,
+  'Muk': f => BIG.includes(f) || DL.includes(f) ? 'Nobody wants to touch him. Rushers just stop.' : null,
+  'Grimer': f => 'Slimed the ball every snap. The equipment manager quit.',
+  'Weezing': f => 'Smokescreen before every snap. The other team cannot find the ball.',
+  'Lickitung': f => ['WR', 'SLOT', 'TE'].includes(f) ? 'Seven-foot tongue. Great hands, extremely gross catches.' : null,
+  'Tentacruel': f => ['ILB', 'OLB', 'S'].includes(f) ? 'Eighty tentacles. Wrap-up tackling machine.' : null,
+  'Zapdos': f => 'Thunder on every snap. Legendary bird energy.',
+  'Moltres': f => ['K', 'P'].includes(f) ? 'Kicks the ball and sets it on fire. Returners decline.' : 'Brings the heat. Literally.',
+  'Articuno': f => 'Ice Beam froze the opposing offense. Legendary bird energy.',
+  'Porygon': f => 'Runs the plays like code. Perfect execution, zero creativity.',
+  'Mr. Mime': f => OL.includes(f) ? 'Put up an invisible wall. Barrier blocks every rusher.' : 'Mimed catching the ball. It did not count.',
+  'Kingler': f => ['ILB', 'OLB', 'DE'].includes(f) ? 'One giant 10,000-horsepower claw. Strips the ball every time.' : null,
+  'Primeape': f => 'Pure rage on every snap. Personal fouls included.',
+  'Nidoking': f => ['DE', 'ILB', 'OLB', 'TE'].includes(f) ? 'Poison horn plus 92 Attack. Old-school enforcer.' : null,
+  'Charizard': f => f === 'QB' ? 'Throws fire, literally. Ball security is a concern.' : null,
+  'Blastoise': f => BIG.includes(f) ? 'Two water cannons for pancake blocks.' : null,
+  'Venusaur': f => BIG.includes(f) ? 'A flower on its back the size of a car. Planted.' : null,
+  'Jolteon': f => SPEEDY.includes(f) ? '130 Speed and spiky fur. Nobody wants to tackle him.' : null,
+  'Flareon': f => ['K', 'P'].includes(f) ? '130 Attack leg. Touchbacks every time.' : null,
+  'Vaporeon': f => 'Melts into water when hit. Very hard to tackle cleanly.',
+};
+const GOOD_LINES = {
+  QB: p => `${p.spc} Special. Reads coverages before the snap.`,
+  RB: p => `${p.spe} Speed and ${p.atk} Attack. Arm tackles slide right off.`,
+  FB: p => `${p.def} Defense as a lead blocker. Linebackers file insurance claims.`,
+  WR: p => `${p.spe} Speed. Corners are still looking for him.`,
+  TE: p => `Big enough to block, quick enough (${p.spe} SPE) to leak out for 15.`,
+  OT: p => `${p.def} Defense on the edge. The blind side is locked down.`,
+  OG: p => `${p.def} DEF and ${p.hp} HP. A phone-booth brawler.`,
+  C:  p => `Anchors the middle with ${p.def} Defense and makes all the line calls.`,
+  DE: p => `${p.atk} Attack off the edge. QBs hear footsteps.`,
+  NT: p => `${p.hp} HP over the center. Double teams just bounce off.`,
+  OLB: p => `${p.spe} Speed setting the edge, ${p.atk} Attack finishing.`,
+  ILB: p => `${p.atk} Attack coming downhill. Running backs reconsider their careers.`,
+  CB: p => `${p.spe} Speed in man coverage. Receivers get blanketed.`,
+  S:  p => `${p.spc} Special reading the QB's eyes from centerfield.`,
+  K:  p => `${p.spc} Special accuracy and a ${p.atk}-Attack leg. Automatic from 50.`,
+  P:  p => `Booming ${p.atk}-Attack leg. Coffin-corner specialist.`,
+  KR: p => `${p.spe} Speed in the return game. Coverage units hate him.`,
+  SLOT: p => `${p.spe} Speed working the middle. Linebackers can't stay with him.`,
+};
+function weakLine(f, p) {
+  const w = FORMULAS[f].w, st = { hp: Math.min(p.hp, 150), atk: p.atk, def: p.def, spc: p.spc, spe: p.spe };
+  const weak = Object.keys(w).sort((a, b) => (st[a] - 80) * w[a] - (st[b] - 80) * w[b])[0]; // most costly stat
+  const v = p[weak];
+  if (weak === 'def' && (OL.includes(f) || f === 'NT' || f === 'FB')) return `${v} Defense up front. Defenders went through him like a revolving door.`;
+  if (weak === 'spe' && SPEEDY.includes(f)) return `${v} Speed at ${f}. He'd lose a footrace to a Slowpoke.`;
+  if (weak === 'spe' && (f === 'OT' || DL.includes(f) || f === 'OLB')) return `${v} Speed. Got beaten around the edge all season.`;
+  if (weak === 'spe' && f === 'QB') return `${v} Speed in the pocket. Sacked before the play clock hit zero.`;
+  if (weak === 'spc' && f === 'QB') return `${v} Special at QB. Kept reading the playbook upside down.`;
+  if (weak === 'atk' && (f === 'K' || f === 'P')) return `${v}-Attack leg. Kicks die at the 30.`;
+  if (weak === 'atk' && (DL.includes(f) || f === 'OLB' || f === 'ILB')) return `${v} Attack. The blocker barely noticed him.`;
+  return {
+    hp: `${v} HP. One big hit and he's on the injury report.`,
+    atk: `${v} Attack. Couldn't push a blocking sled downhill.`,
+    def: `${v} Defense. Got bulldozed every snap.`,
+    spc: `${v} Special. Blew his assignment more than once.`,
+    spe: `${v} Speed. Got lapped.`,
+  }[weak];
+}
+function scoutNote(slotId, pick) {
+  const s = SLOT_BY_ID[slotId], f = s.f, p = DEX[pick.dex - 1];
+  const r = rating(pick.dex, slotId, pick.shiny), bf = bestFit(pick.dex), bo = pick.bo;
+  const missed = bo && bo.r - r >= 12 ? bo : null;
+  const tone = r >= 85 || (r >= 75 && (!bo || bo.r - r <= 3)) ? 'good' : (r < 62 || missed) ? 'bad' : 'meh';
+  const special = SPECIAL[p.name] ? SPECIAL[p.name](f) : null;
+  let text = special || (tone === 'bad' ? weakLine(f, p) : tone === 'good' ? GOOD_LINES[f](p) : (r >= 70 ? GOOD_LINES[f](p) + ' Solid, not spectacular.' : weakLine(f, p)));
+  if (tone === 'bad' || tone === 'meh') {
+    if (missed) text += ` You had ${missed.pos} open for him (${missed.r}).`;
+    else if (bf.r - r >= 12) text += ` His best position is ${bf.pos} (${bf.r}).`;
+  }
+  if (pick.shiny) text += ' ✨ Shiny bonus.';
+  return { slotId, pos: s.pos, name: p.name, r, tone, text, gap: Math.max(missed ? missed.r - r : 0, 0) };
+}
+function scoutingReport(picks) {
+  const notes = SLOTS.map(s => scoutNote(s.id, picks[s.id]));
+  const hits = notes.filter(n => n.tone === 'good').sort((a, b) => b.r - a.r).slice(0, 3);
+  const misses = notes.filter(n => n.tone === 'bad').sort((a, b) => (b.gap - a.gap) || (a.r - b.r)).slice(0, 3);
+  return { notes, hits, misses };
+}
+// ENGINE END
+
+// ===================== UI =====================
+const $ = s => document.querySelector(s);
+const SAVE_KEY = 'gridiron151_v3';
+const RESPINS = 5;
+let state = freshState();
+let busy = false;
+
+function freshState() {
+  return { picks: {}, respins: { type: RESPINS, stage: RESPINS, poke: RESPINS }, cur: null, sel: null, done: false };
+}
+function save() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(state)); } catch (e) {} }
+function load() {
+  try { const s = JSON.parse(localStorage.getItem(SAVE_KEY)); if (s && s.picks && s.respins) state = Object.assign(freshState(), s); } catch (e) {}
+}
+
+// ---------- pool & spin logic ----------
+const usedSet = () => new Set(Object.values(state.picks).map(p => p.dex));
+function candidates(type, stage) {
+  const used = usedSet();
+  return DEX.filter(p => !used.has(p.dex) && p.types.includes(type) && p.stage === stage);
+}
+const rnd = a => a[Math.floor(Math.random() * a.length)];
+function pickType(stage, exclude) {
+  const ts = TYPE_LIST.filter(t => t !== exclude && (stage ? candidates(t, stage).length : STAGES.some(s => candidates(t, s).length)));
+  return ts.length ? rnd(ts) : null;
+}
+function pickStage(type, exclude) {
+  const ss = STAGES.filter(s => s !== exclude && candidates(type, s).length);
+  if (!ss.length) return null;
+  let r = Math.random() * ss.reduce((a, s) => a + STAGE_WEIGHT[s], 0);
+  for (const s of ss) { r -= STAGE_WEIGHT[s]; if (r <= 0) return s; }
+  return ss[ss.length - 1];
+}
+function pickPoke(type, stage, excludeDex) {
+  const c = candidates(type, stage).filter(p => p.dex !== excludeDex);
+  return c.length ? rnd(c) : null;
+}
+const rollShiny = () => Math.random() < SHINY_ODDS;
+const P = dex => DEX[dex - 1];
+const UP = s => s.toUpperCase();
+// Art: drop images into an "art" folder next to index.html, named by Pokédex number (art/001.png … art/151.png).
+// Missing images fall back to the type-color tiles automatically.
+const ART_DIR = 'art/', ART_EXT = '.png';
+const artSrc = dex => ART_DIR + String(dex).padStart(3, '0') + ART_EXT;
+const artImg = (dex, cls) => `<img class="${cls}" src="${artSrc(dex)}" alt="" loading="lazy" onload="document.body.classList.add('art-on')" onerror="this.remove()">`;
+const openSlots = () => SLOTS.filter(s => !state.picks[s.id]);
+
+function canRespin(kind) {
+  const c = state.cur;
+  if (!c || busy || state.done || state.respins[kind] <= 0) return false;
+  if (kind === 'poke') return candidates(c.type, c.stage).filter(p => p.dex !== c.dex).length > 0;
+  if (kind === 'stage') return STAGES.some(s => s !== c.stage && candidates(c.type, s).length);
+  if (kind === 'type') return !!pickType(null, c.type);
+  return false;
+}
+
+// ---------- reels ----------
+function pips(stage) {
+  const n = +stage; return [1, 2, 3].map(i => `<span class="pip${i > n ? ' off' : ''}"></span>`).join('');
+}
+function reelItem(kind, val, shiny) {
+  if (kind === 'type') return `<div class="ri" style="--c:${TYPES[val].c}"><span class="dot"></span>${UP(val)}</div>`;
+  if (kind === 'stage') return val === 'L' ? `<div class="ri legend">★ LEGEND</div>` : `<div class="ri">${pips(val)}&nbsp;STAGE ${val}</div>`;
+  return `<div class="ri">${shiny ? '★' : ''}${UP(P(val).name)}</div>`;
+}
+function setReel(kind, html) {
+  const strip = $('#reel-' + kind + ' .strip');
+  strip.style.transition = 'none'; strip.style.transform = 'translateY(0)'; strip.innerHTML = html;
+}
+function blankReels() { ['type', 'stage', 'poke'].forEach(k => setReel(k, '<div class="ri blank">?</div>')); }
+function staticReels() {
+  const c = state.cur;
+  if (!c) return blankReels();
+  setReel('type', reelItem('type', c.type)); setReel('stage', reelItem('stage', c.stage)); setReel('poke', reelItem('poke', c.dex, c.shiny));
+}
+function animReel(kind, finalVal, dur, shiny, ctxType) {
+  return new Promise(res => {
+    const strip = $('#reel-' + kind + ' .strip');
+    const N = 16 + Math.floor(dur / 120);
+    const fillers = kind === 'type' ? TYPE_LIST : kind === 'stage' ? STAGES : DEX.filter(p => p.types.includes(ctxType)).map(p => p.dex);
+    let html = strip.firstElementChild ? strip.firstElementChild.outerHTML : '';
+    for (let i = 0; i < N; i++) html += reelItem(kind, rnd(fillers), false);
+    html += reelItem(kind, finalVal, shiny);
+    strip.style.transition = 'none'; strip.style.transform = 'translateY(0)'; strip.innerHTML = html;
+    const h = strip.firstElementChild.getBoundingClientRect().height;
+    const steps = strip.children.length - 1;
+    void strip.offsetHeight;
+    strip.style.transition = `transform ${dur}ms cubic-bezier(.12,.75,.22,1.02)`;
+    strip.style.transform = `translateY(${-steps * h}px)`;
+    setTimeout(() => { setReel(kind, reelItem(kind, finalVal, shiny)); res(); }, dur + 40);
+  });
+}
+async function runReels(changes) {
+  busy = true; render();
+  const c = state.cur, jobs = []; let d = 900;
+  if (changes.type) { jobs.push(animReel('type', c.type, d)); d += 400; }
+  if (changes.stage) { jobs.push(animReel('stage', c.stage, d)); d += 400; }
+  jobs.push(animReel('poke', c.dex, d, c.shiny, c.type));
+  await Promise.all(jobs);
+  busy = false;
+  if (c.shiny) toast(`★ It's a shiny ${UP(P(c.dex).name)}!`);
+  else if (c.stage === 'L') toast(`A legendary ${UP(P(c.dex).name)} appeared!`);
+  render();
+}
+
+// ---------- actions ----------
+async function spin() {
+  const t = pickType(null), s = pickStage(t), p = pickPoke(t, s);
+  state.cur = { type: t, stage: s, dex: p.dex, shiny: rollShiny() }; state.sel = null; save();
+  await runReels({ type: 1, stage: 1 });
+}
+async function respin(kind) {
+  if (!canRespin(kind)) return;
+  const c = state.cur, changes = {};
+  if (kind === 'type') {
+    let t = pickType(c.stage, c.type), s = c.stage;
+    if (!t) { t = pickType(null, c.type); s = pickStage(t); toast(`No other type has a ${STAGE_LABEL[c.stage]} left. Evolution re-rolled too.`); changes.stage = 1; }
+    c.type = t; c.stage = s; changes.type = 1;
+  } else if (kind === 'stage') {
+    c.stage = pickStage(c.type, c.stage); changes.stage = 1;
+  }
+  c.dex = pickPoke(c.type, c.stage, kind === 'poke' ? c.dex : undefined).dex;
+  c.shiny = rollShiny();
+  state.respins[kind]--; state.sel = null; save();
+  await runReels(changes);
+}
+function selectSlot(id) {
+  if (!state.cur || busy || state.picks[id] || state.done) return;
+  state.sel = state.sel === id ? null : id; render();
+}
+function lockIn() {
+  const { cur, sel } = state; if (!cur || !sel) return;
+  let bo = null; // remembered for the post-season report only
+  for (const s of openSlots()) { const r = rating(cur.dex, s.id, cur.shiny); if (!bo || r > bo.r) bo = { pos: s.pos, id: s.id, r }; }
+  state.picks[sel] = { dex: cur.dex, shiny: cur.shiny, bo };
+  const name = UP(P(cur.dex).name), pos = SLOT_BY_ID[sel].pos;
+  state.cur = null; state.sel = null; save();
+  blankReels(); render();
+  toast(`Go! ${name}! Locked in at ${pos}.`);
+  const el = document.querySelector(`.slot[data-id="${sel}"]`); if (el) { el.classList.add('flash'); setTimeout(() => el.classList.remove('flash'), 600); }
+}
+function submit() { state.done = true; save(); render(); showResults(); }
+function newGame() { state = freshState(); save(); blankReels(); render(); closeAll(); }
+
+// ---------- rendering ----------
+const rColor = r => r >= 90 ? '#4ade80' : r >= 80 ? '#a3e635' : r >= 70 ? '#fbbf24' : r >= 60 ? '#fb923c' : '#f05252';
+const statColor = v => v >= 100 ? 'var(--hp-g)' : v >= 60 ? 'var(--hp-y)' : 'var(--hp-r)';
+
+function buildField() {
+  document.querySelectorAll('[data-row]').forEach(r => r.innerHTML = '');
+  for (const s of SLOTS) {
+    const b = document.createElement('button');
+    b.className = 'slot'; b.dataset.id = s.id;
+    b.innerHTML = `<span class="pos">${s.pos}</span><span class="nm"></span><span class="rt" hidden></span>`;
+    b.addEventListener('click', () => selectSlot(s.id));
+    document.querySelector(`[data-row="${s.row}"]`).appendChild(b);
+  }
+}
+function fitText(el) {
+  el.style.fontSize = '';
+  let size = parseFloat(getComputedStyle(el).fontSize);
+  while (el.scrollWidth > el.clientWidth + 0.5 && size > 7) { size -= 0.5; el.style.fontSize = size + 'px'; }
+}
+function renderField() {
+  const armed = !!state.cur && !busy && !state.done;
+  $('#field').classList.toggle('armed', armed);
+  document.querySelector('.st-wrap').classList.toggle('armed', armed);
+  for (const s of SLOTS) {
+    const el = document.querySelector(`.slot[data-id="${s.id}"]`), pk = state.picks[s.id];
+    const nm = el.querySelector('.nm'), rt = el.querySelector('.rt');
+    el.classList.toggle('filled', !!pk); el.classList.toggle('selected', state.sel === s.id);
+    el.querySelector('.star') && el.querySelector('.star').remove();
+    rt.hidden = true;
+    if (pk) {
+      const p = P(pk.dex);
+      el.style.setProperty('--t1', TYPES[p.types[0]].c); el.style.setProperty('--t2', TYPES[p.types[1] || p.types[0]].c);
+      nm.textContent = UP(p.name); fitText(nm);
+      if (el.dataset.art !== String(pk.dex)) { el.querySelector('.fart') && el.querySelector('.fart').remove(); el.insertAdjacentHTML('afterbegin', artImg(pk.dex, 'fart')); el.dataset.art = pk.dex; }
+      if (pk.shiny) el.insertAdjacentHTML('beforeend', '<span class="star">★</span>');
+      if (state.done) { const r = rating(pk.dex, s.id, pk.shiny); rt.hidden = false; rt.textContent = r; rt.style.background = rColor(r); }
+    } else { nm.textContent = ''; nm.style.fontSize = ''; el.querySelector('.fart') && el.querySelector('.fart').remove(); delete el.dataset.art; }
+  }
+}
+function renderInfo() {
+  const c = state.cur, info = $('#info'), n = Object.keys(state.picks).length;
+  if (busy) { info.innerHTML = `<div class="line">The reels are spinning…</div>`; return; }
+  if (state.done) { info.innerHTML = `<div class="line">The season is over.</div><div class="sub">Open your season report to see how the roster held up.</div>`; return; }
+  if (!c) {
+    info.innerHTML = n === 25
+      ? `<div class="line">Your roster is full!</div><div class="sub">Play the season: 17 games, then the playoffs.</div><span class="caret">▼</span>`
+      : `<div class="line">Pick ${n + 1} of 25. Ready to spin?</div><div class="sub">Once a Pokémon is placed, it stays there for the season.</div><span class="caret">▼</span>`;
+    return;
+  }
+  const p = P(c.dex);
+  const pills = p.types.map(t => `<span class="tpill" style="--c:${TYPES[t].c}">${UP(t)}</span>`).join('');
+  const stats = [['HP', p.hp], ['ATK', p.atk], ['DEF', p.def], ['SPC', p.spc], ['SPD', p.spe]].map(([k, v]) =>
+    `<div class="st"><div class="k">${k}<b>${v}</b></div><div class="bar"><i style="width:${Math.min(100, v / 1.6)}%;background:${statColor(v)}"></i></div></div>`).join('');
+  const verb = c.stage === 'L' ? 'A legendary' : c.shiny ? 'A shiny' : 'A wild';
+  info.innerHTML = `${artImg(p.dex, 'dart' + (c.shiny ? ' shiny-art' : ''))}<div class="line">${verb} <span class="nm">${UP(p.name)}</span> appeared!</div>
+    <div class="mon" style="margin-top:6px"><span class="dexno">No.${String(p.dex).padStart(3, '0')}</span>${pills}${c.shiny ? '<span class="shiny">★ SHINY +' + SHINY_BONUS + '</span>' : ''}</div>
+    <div class="stats">${stats}</div>`;
+}
+function renderControls() {
+  const n = Object.keys(state.picks).length;
+  $('#pickCount').textContent = state.done ? 'FINAL' : `${Math.min(n + 1, 25)}/25`;
+  document.querySelectorAll('.rs').forEach(b => { const k = b.dataset.r; b.querySelector('b').textContent = state.respins[k]; b.disabled = !canRespin(k); });
+  const a = $('#action'); a.className = 'action'; a.disabled = false;
+  if (state.done) { a.textContent = 'SEASON REPORT'; a.onclick = showResults; }
+  else if (busy) { a.textContent = 'Spinning…'; a.disabled = true; }
+  else if (n === 25) { a.textContent = 'PLAY THE SEASON'; a.classList.add('go'); a.onclick = submit; }
+  else if (!state.cur) { a.textContent = 'SPIN'; a.onclick = spin; }
+  else if (!state.sel) { a.textContent = `Tap a spot on the field for ${UP(P(state.cur.dex).name)}`; a.disabled = true; }
+  else { a.textContent = `PLACE AT ${SLOT_BY_ID[state.sel].pos}`; a.classList.add('place'); a.onclick = lockIn; }
+  $('#btnShowResults').hidden = !state.done;
+}
+function render() {
+  renderField(); renderInfo(); renderControls();
+  document.body.style.setProperty('--sheet-h', $('#sheet').offsetHeight + 14 + 'px');
+}
+
+// ---------- results ----------
+const gColor = g => g === 'S' || g.startsWith('A') ? '#3ddc84' : g.startsWith('B') ? '#b5e655' : g.startsWith('C') ? '#ffd23f' : g === 'D' ? '#ff9f43' : '#ff5a4f';
+const gChip = g => `<span class="gchip" style="background:${gColor(g)}">${g}</span>`;
+function seasonStory(res) {
+  if (res.perfect) return 'A perfect lineup. 17–0, three straight playoff wins, and an Indigo Bowl ring. Nobody in Kanto came close.';
+  const rec = `${res.wins}–${res.losses}`;
+  if (!res.seed) return res.wins === 9 ? `Finished ${rec} and missed the playoffs on the final weekend. So close.` : `Finished ${rec}. No playoffs this year. ${res.wins <= 4 ? 'At least the draft pick will be high.' : 'A few better placements and this is a wild-card team.'}`;
+  const seedTxt = res.seed === 1 ? 'clinched the #1 seed and a first-round bye' : `earned the #${res.seed} seed`;
+  if (res.champ) return `Went ${rec}, ${seedTxt}, then ran the table. Indigo Bowl Champions!`;
+  const last = res.playoffs[res.playoffs.length - 1];
+  return `Went ${rec} and ${seedTxt}. The run ended in the ${last.round}, falling ${last.us}–${last.them} to the ${last.name}.`;
+}
+function showResults() {
+  const res = simulateSeason(state.picks), units = unitReport(state.picks), scout = scoutingReport(state.picks);
+  const mvp = scout.notes.reduce((b, n) => n.r > b.r ? n : b);
+  const bracket = PLAYOFF_ROUNDS.map(([round], i) => {
+    const g = res.playoffs[i];
+    if (!g) return `<div class="rd locked"><div class="rn">${UP(round)}</div><div class="mu dim">Eliminated before this round</div></div>`;
+    if (g.bye) return `<div class="rd bye"><div class="rn">${UP(round)}</div><div class="mu"><span class="seed">#1</span><b>Your team</b><span class="sc">BYE</span></div><div class="mu dim">Top seed rests at home</div></div>`;
+    return `<div class="rd ${g.win ? 'won' : 'lost'}"><div class="rn">${UP(round)}${i === 3 ? ' ★' : ''}</div>
+      <div class="mu ${g.win ? 'w' : ''}"><span class="seed">#${res.seed}</span><b>Your team</b><span class="sc">${g.us}</span></div>
+      <div class="mu ${g.win ? '' : 'w'}"><span class="seed">#${g.oppSeed}</span>${g.name}<span class="sc">${g.them}</span></div></div>`;
+  }).join('');
+  const games = res.games.map(g => `<tr><td>Wk ${g.week}</td><td>${g.name}<br><small style="color:var(--muted)">OVR ${g.opp.toFixed(1)}</small></td><td class="${g.win ? 'W' : 'L'}">${g.win ? 'W' : 'L'}</td><td class="n">${g.us}–${g.them}</td></tr>`).join('');
+  const noteHTML = n => `<div class="note ${n.tone}"><div class="nh"><span class="tone"></span><b>${UP(n.name)}</b> at ${n.pos}<span class="nr">${n.r}</span></div><div>${n.text}</div></div>`;
+  const unitCards = units.map(u => {
+    const groups = u.groups.map(g => `<div class="grp"><span>${g.name}</span><span class="gv">${g.avg.toFixed(0)}<small> / ${g.best.toFixed(0)}</small></span>${gChip(g.grade)}</div>`).join('');
+    const ids = new Set(u.groups.flatMap(g => g.ids));
+    const notes = scout.notes.filter(n => ids.has(n.slotId)).map(noteHTML).join('');
+    const sw = u.groups.length > 1 && u.strength !== u.weakness
+      ? `<p class="sw"><b style="color:var(--green)">Strength:</b> ${u.strength.name} · <b style="color:var(--red)">Weakness:</b> ${u.weakness.name}</p>` : '';
+    return `<div class="unit"><div class="uh"><h4>${u.name}</h4>${gChip(u.grade)}</div>
+      <div class="usub">Unit rating ${u.avg.toFixed(1)} vs. perfect ${u.best.toFixed(1)}</div>
+      ${groups}${sw}
+      <details><summary>Scouting report: every ${u.name.toLowerCase()} pick</summary>${notes}</details></div>`;
+  }).join('');
+
+  const finishBanner = res.champ ? `<div class="banner">★ ${UP(res.finish)} ★</div>` :
+    `<div class="finish ${res.seed ? 'in' : 'out'}">${res.seed ? `#${res.seed} seed · ` : ''}${res.finish}</div>`;
+  $('#results').innerHTML = `
+    <button class="mclose" data-close>×</button>
+    <h2>SEASON REPORT</h2>
+    <div><span class="record">${res.wins}–${res.losses}</span><span class="grade" style="background:${gColor(res.grade)}">${res.grade}</span></div>
+    ${finishBanner}
+    <p>${seasonStory(res)}</p>
+    ${res.seed ? `<h3>Playoff bracket</h3><div class="bracket">${bracket}</div>` : ''}
+    <div class="kpis">
+      <div class="kpi"><b>${res.ovr.toFixed(1)}</b><span>Your OVR</span></div>
+      <div class="kpi"><b>${OPTIMAL.ovr.toFixed(1)}</b><span>Perfect OVR</span></div>
+      <div class="kpi"><b>${Math.round(res.pct * 100)}%</b><span>Of perfect</span></div>
+    </div>
+    <div class="btnrow"><button class="btn pri" id="btnCard">Share card</button><button class="btn" id="btnShare">Share text</button></div>
+    <div class="btnrow" style="margin-top:8px"><button class="btn" id="btnAgain">Play again</button></div>
+
+    <h3>Report card</h3>
+    <div class="cards3">${units.map(u => `<div class="kpi"><b style="color:${gColor(u.grade)}">${u.grade}</b><span>${u.name}</span></div>`).join('')}</div>
+    <p>MVP: <b>${mvp.name}</b> at ${mvp.pos} (${mvp.r}).</p>
+    ${scout.hits.length ? `<h3>Smart picks</h3>${scout.hits.map(noteHTML).join('')}` : ''}
+    ${scout.misses.length ? `<h3>Questionable calls</h3>${scout.misses.map(noteHTML).join('')}` : ''}
+
+    <h3>Unit breakdown</h3>${unitCards}
+
+    
+    <h3>Regular season</h3><table>${games}</table>
+    <p style="font-size:14px;color:var(--muted)">Perfect OVR is the best score any 25-man lineup can reach. Find it and you go undefeated and win the Indigo Bowl.</p>`;
+  $('#btnAgain').onclick = newGame;
+  $('#btnShare').onclick = () => share(res, units, mvp);
+  $('#btnCard').onclick = () => showCard(res, units, mvp);
+  openOv('#ov-results');
+}
+async function share(res, units, mvp) {
+  const text = `Gridiron 151\n${res.wins}–${res.losses} · ${res.finish}\nGrade ${res.grade} · ${Math.round(res.pct * 100)}% of perfect\n` +
+    units.map(u => `${u.name} ${u.grade}`).join(' · ') + `\nMVP ${mvp.name} (${mvp.pos})`;
+  try {
+    if (navigator.share) { await navigator.share({ text }); return; }
+    await navigator.clipboard.writeText(text); toast('Copied to clipboard');
+  } catch (e) { toast('Could not share. Try again.'); }
+}
+
+
+// ---------- share card (screenshot-ready) ----------
+function showCard(res, units, mvp) {
+  const tile = s => {
+    const pk = state.picks[s.id], p = P(pk.dex), r = rating(pk.dex, s.id, pk.shiny);
+    return `<div class="ct" style="--t1:${TYPES[p.types[0]].c};--t2:${TYPES[p.types[1] || p.types[0]].c}">${artImg(p.dex, 'cart')}<span class="cn">${UP(p.name)}</span><span class="cp">${s.pos}${pk.shiny ? '★' : ''}<i class="cr" style="background:${rColor(r)}">${r}</i></span></div>`;
+  };
+  const row = (id, cls = '') => `<div class="crow ${cls}">${SLOTS.filter(s => s.row === id).map(tile).join('')}</div>`;
+  const finish = res.champ ? 'INDIGO BOWL CHAMPIONS' : res.seed ? `#${res.seed} SEED · ${UP(res.finish)}` : UP(res.finish);
+  $('#card').innerHTML = `
+    <div class="cardhead">
+      <div class="clogo">GRIDIRON 151</div>
+      <div class="crec">${res.wins}–${res.losses}</div>
+      <div class="cfin ${res.champ ? 'champ' : res.seed ? '' : 'out'}">${finish}</div>
+      <div class="cgrades">
+        <div><b style="background:${gColor(res.grade)}">${res.grade}</b><span>Overall</span></div>
+        ${units.map(u => `<div><b style="background:${gColor(u.grade)}">${u.grade}</b><span>${u.name === 'Special Teams' ? 'Special' : u.name}</span></div>`).join('')}
+      </div>
+    </div>
+    <div class="cfield">
+      ${row('d1', 'spread')}${row('d2')}${row('d3')}
+      <div class="clos"></div>
+      ${row('o1')}${row('o2', 'wide')}${row('o3')}${row('o4')}
+    </div>
+    <div class="cst">${row('st', 'spread')}</div>
+    <div class="cfoot">OVR ${res.ovr.toFixed(1)} · MVP ${UP(mvp.name)} (${mvp.pos})</div>`;
+  document.querySelectorAll('#card .cn').forEach(fitText);
+  closeAll(); openOv('#ov-card');
+  document.querySelectorAll('#card .cn').forEach(fitText);
+}
+async function saveCard() {
+  try {
+    if (!window.html2canvas) await new Promise((ok, bad) => { const s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'; s.onload = ok; s.onerror = bad; document.head.appendChild(s); });
+    const canvas = await html2canvas($('#card'), { backgroundColor: '#0f1729', scale: 2 });
+    const blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
+    const file = new File([blob], 'gridiron151.png', { type: 'image/png' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file] }); return; }
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'gridiron151.png'; a.click();
+  } catch (e) { toast('Couldn’t save the image. Take a screenshot instead.'); }
+}
+
+// ---------- help ----------
+function buildHelp() {
+  const rows = Object.entries(FORMULAS).map(([k, f]) =>
+    `<tr><td><b>${k}</b></td><td>${Object.entries(f.w).map(([s, w]) => `${s.toUpperCase()} ${Math.round(w * 100)}%`).join(', ')}<br><small style="color:var(--muted)">${f.why}</small></td></tr>`).join('');
+  $('#help').innerHTML = `
+    <button class="mclose" data-close>×</button>
+    <h2>HOW TO PLAY</h2>
+    <ul>
+      <li>Fill all <b>25 spots</b>: 11 offense, 11 defense (3-4), plus K, P and KR/PR.</li>
+      <li><b>Spin</b> to roll a <b>Type</b>, then an <b>Evolution stage</b>, then a <b>Pokémon</b> (original 151 only).</li>
+      <li>Tap an open spot, then <b>Place</b> it. Once placed, a Pokémon can't move.</li><li>Ratings stay hidden until the season is played. Use the stats to judge where each Pokémon fits.</li>
+      <li>Each Pokémon can only be picked once. Other members of its evolution line are still in play.</li>
+    </ul>
+    <h3>Respins (5 each, whole game)</h3>
+    <ul>
+      <li><b>Type</b>: new type, <i>same stage</i>, new Pokémon.</li>
+      <li><b>Evolution</b>: same type, new stage, new Pokémon.</li>
+      <li><b>Pokémon</b>: same type and stage, different Pokémon.</li>
+    </ul>
+    <h3>Odds</h3>
+    <ul>
+      <li>All 15 Gen 1 types are equally likely (dual types count for both).</li>
+      <li>Stage 1 ${STAGE_WEIGHT['1']}% · Stage 2 ${STAGE_WEIGHT['2']}% · Stage 3 ${STAGE_WEIGHT['3']}% · Legendary ${STAGE_WEIGHT['L']}%. Only stages that exist for that type can land.</li>
+      <li>Pokémon that never evolve count as Stage 1. Legendaries: Articuno, Zapdos, Moltres, Mewtwo, Mew.</li>
+      <li>Every Pokémon has a 1-in-${Math.round(1 / SHINY_ODDS)} chance to be <b>★ shiny</b> (+${SHINY_BONUS} at every position).</li>
+    </ul>
+    <h3>Ratings</h3>
+    <p>Each position weighs Gen 1 base stats differently, then the result is scaled against all 151 (max 99). HP is capped at 150.</p>
+    <table>${rows}</table>
+    <h3>The season</h3>
+    <p>Team OVR is the weighted average of all 25 ratings (QB counts most; K and P least). You play 17 opponents ranging from easy to near-perfect. 10+ wins makes the playoffs (14+ gets the #1 seed and a bye), then it's four rounds to the Indigo Bowl. Upsets happen, but the same lineup always gets the same season. The best possible lineup always goes 17–0 and wins it all.</p><p>After the season you get a report card: Offense, Defense and Special Teams grades, each position group graded against the perfect team, and a scouting note on every pick.</p>`;
+}
+
+// ---------- misc ----------
+function openOv(sel) { $(sel).hidden = false; }
+function closeAll() { document.querySelectorAll('.overlay').forEach(o => o.hidden = true); }
+document.addEventListener('click', e => {
+  if (e.target.matches('[data-close]') || e.target.classList.contains('overlay')) closeAll();
+});
+let toastT;
+function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2200); }
+
+document.querySelectorAll('.rs').forEach(b => b.addEventListener('click', () => respin(b.dataset.r)));
+$('#btnHelp').onclick = () => openOv('#ov-help');
+$('#btnMenu').onclick = () => openOv('#ov-menu');
+$('#btnSaveCard').onclick = saveCard;
+$('#btnCardBack').onclick = () => { closeAll(); showResults(); };
+$('#btnHelp2').onclick = () => { closeAll(); openOv('#ov-help'); };
+$('#btnNew').onclick = () => { if (confirm('Start a new game? Your current team will be lost.')) newGame(); };
+$('#btnShowResults').onclick = () => { closeAll(); showResults(); };
+window.addEventListener('resize', render);
+
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => render());
+load(); buildField(); buildHelp(); staticReels(); render();
+try { if (!localStorage.getItem('gridiron151_seen')) { localStorage.setItem('gridiron151_seen', '1'); openOv('#ov-help'); } } catch (e) { openOv('#ov-help'); }
+
+</script>
+</body>
+</html>
