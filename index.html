@@ -916,11 +916,15 @@ function pickPoke(type, stage, excludeDex) {
 const rollShiny = () => Math.random() < SHINY_ODDS;
 const P = dex => DEX[dex - 1];
 const UP = s => s.toUpperCase();
-// Art: drop images into an "art" folder next to index.html, named by Pokédex number (art/001.png … art/151.png).
-// Missing images fall back to the type-color tiles automatically.
-const ART_DIR = 'art/', ART_EXT = '.png';
-const artSrc = dex => ART_DIR + String(dex).padStart(3, '0') + ART_EXT;
-const artImg = (dex, cls) => `<img class="${cls}" src="${artSrc(dex)}" alt="" loading="lazy" onload="document.body.classList.add('art-on')" onerror="this.remove()">`;
+// Art: images named by Pokédex number (001.png … 151.png) in any of these folders next to index.html.
+// The game checks each folder in order, so the set can be split across folders. Missing images fall back to type-color tiles.
+const ART_DIRS = ['art/', 'art2/', 'art3/'], ART_EXT = '.png';
+const artSrc = (dex, i = 0) => ART_DIRS[i] + String(dex).padStart(3, '0') + ART_EXT;
+function artMiss(img) {
+  const i = +img.dataset.i + 1;
+  if (i < ART_DIRS.length) { img.dataset.i = i; img.src = artSrc(+img.dataset.dex, i); } else img.remove();
+}
+const artImg = (dex, cls) => `<img class="${cls}" src="${artSrc(dex)}" data-dex="${dex}" data-i="0" alt="" loading="lazy" onload="document.body.classList.add('art-on')" onerror="artMiss(this)">`;
 const openSlots = () => SLOTS.filter(s => !state.picks[s.id]);
 
 function canRespin(kind) {
