@@ -216,17 +216,22 @@ summary{cursor:pointer;font-size:16px;font-weight:700;color:var(--gold);padding:
 .dart{width:100%;height:100%;object-fit:contain}
 .dart.shiny-art{filter:drop-shadow(0 0 8px rgba(245,183,0,.95))}
 .dtext{min-width:0;flex:1}
-/* field tile with art: the art fills the tile, name sits on a strip at the bottom, position tag top-left */
-.slot.filled.has-art,body.art-on .slot.filled{height:84px}
-.slot.filled.has-art{padding:6px 0 0;justify-content:flex-end}
-.slot.filled.has-art .fart{position:absolute;inset:7px 2px 18px 2px;width:calc(100% - 4px);height:calc(100% - 25px);object-fit:contain}
-.slot.filled.has-art .nm{position:relative;z-index:1;background:rgba(10,17,32,.85);padding:2px 1px 3px;margin:0;font-size:10px}
-.slot.filled.has-art .pos{position:absolute;top:8px;left:3px;z-index:1;font-size:8.5px;background:rgba(10,17,32,.8);border-radius:3px;padding:0 3px;color:var(--paper)}
-.ct.has-art,body.art-on .ct{height:62px}
-.ct.has-art{justify-content:flex-end;padding:5px 0 0}
-.ct .cart{position:absolute;inset:5px 1px 22px 1px;width:calc(100% - 2px);height:calc(100% - 27px);object-fit:contain}
-.ct.has-art .cn,.ct.has-art .cp{position:relative;z-index:1}
-.ct.has-art .cn{background:rgba(10,17,32,.85);padding:1px 0}
+/* field tile with art: just the art, then name and position on the open field (no box, no edges) */
+.slot.filled.has-art,body.art-on .slot.filled{height:92px}
+.slot.filled.has-art{background:transparent;border:0;padding:0;overflow:visible;justify-content:flex-start;gap:0}
+.slot.filled.has-art::before{display:none}
+.slot.filled.has-art .fart{order:0;width:100%;height:62px;object-fit:contain;margin:0;filter:drop-shadow(0 3px 3px rgba(0,0,0,.45))}
+.slot.filled.has-art .nm{order:1;margin:2px 0 0;font-size:11px;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.9),0 0 4px rgba(0,0,0,.6)}
+.slot.filled.has-art .pos{order:2;position:static;font-size:10px;font-weight:800;color:var(--gold);text-shadow:0 1px 2px rgba(0,0,0,.9)}
+.slot.filled.has-art .star{top:0;right:2px;font-size:12px;text-shadow:0 1px 2px rgba(0,0,0,.8)}
+.slot.filled.has-art.selected,.slot.filled.has-art.flash{background:transparent!important}
+.ct.has-art,body.art-on .ct{height:66px}
+.ct.has-art{background:transparent;padding:0;justify-content:flex-start;overflow:visible}
+.ct.has-art::before{display:none}
+.ct .cart{position:static;width:100%;height:42px;object-fit:contain;filter:drop-shadow(0 2px 2px rgba(0,0,0,.45))}
+.ct.has-art .cn{color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.9);margin-top:1px}
+.ct.has-art .cp{color:var(--gold);text-shadow:0 1px 2px rgba(0,0,0,.9)}
+.cst .ct.has-art .cn,.cst .ct.has-art .cp{text-shadow:none}
 @media(min-width:560px){
   :root{--rh:54px}
   .slot{height:64px}.slot .pos{font-size:17px}.slot .nm{font-size:14px}
