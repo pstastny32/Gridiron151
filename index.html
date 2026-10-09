@@ -35,38 +35,45 @@ header{display:flex;align-items:center;justify-content:space-between;gap:10px;pa
 
 /* ---------- field ---------- */
 main{max-width:760px;margin:0 auto;padding:0 10px}
-.field{position:relative;border-radius:10px;overflow:hidden;padding:10px 4px 12px;
-  background:repeating-linear-gradient(180deg,var(--turf1) 0 46px,var(--turf2) 46px 92px);
-  border:3px solid #e8efe9;box-shadow:0 0 0 3px #0b1220, 0 14px 40px rgba(0,0,0,.45)}
+.field{position:relative;overflow:hidden;margin:0 -10px;padding:12px 8px 14px;
+  background:radial-gradient(120% 60% at 50% 35%,rgba(255,255,255,.07),transparent 70%),
+    repeating-linear-gradient(90deg,rgba(0,0,0,.025) 0 2px,transparent 2px 5px),
+    repeating-linear-gradient(180deg,#2f8a3c 0 64px,#2a7f36 64px 128px)}
 .field::before{content:"";position:absolute;inset:0;pointer-events:none;
-  background:repeating-linear-gradient(180deg,transparent 0 91px,rgba(255,255,255,.28) 91px 93px),
-             radial-gradient(90% 50% at 50% 0%,rgba(255,255,255,.10),transparent 70%)}
+  background:repeating-linear-gradient(180deg,transparent 0 126px,rgba(255,255,255,.6) 126px 128px)}
+.field::after{content:"";position:absolute;inset:0;pointer-events:none;background:url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20viewBox%3D%270%200%20100%20100%27%20preserveAspectRatio%3D%27none%27%3E%3Cpath%20d%3D%27M6%200L1.5%20100M94%200L98.5%20100%27%20stroke%3D%27white%27%20stroke-width%3D%273%27%20vector-effect%3D%27non-scaling-stroke%27%20fill%3D%27none%27%20opacity%3D%27.9%27/%3E%3Cpath%20d%3D%27M37%202H40M60%202H63M8.5%202H11M89%202H91.5M37%206H40M60%206H63M8.5%206H11M89%206H91.5M37%2010H40M60%2010H63M8.5%2010H11M89%2010H91.5M37%2014H40M60%2014H63M8.5%2014H11M89%2014H91.5M37%2018H40M60%2018H63M8.5%2018H11M89%2018H91.5M37%2022H40M60%2022H63M8.5%2022H11M89%2022H91.5M37%2026H40M60%2026H63M8.5%2026H11M89%2026H91.5M37%2030H40M60%2030H63M8.5%2030H11M89%2030H91.5M37%2034H40M60%2034H63M8.5%2034H11M89%2034H91.5M37%2038H40M60%2038H63M8.5%2038H11M89%2038H91.5M37%2042H40M60%2042H63M8.5%2042H11M89%2042H91.5M37%2046H40M60%2046H63M8.5%2046H11M89%2046H91.5M37%2050H40M60%2050H63M8.5%2050H11M89%2050H91.5M37%2054H40M60%2054H63M8.5%2054H11M89%2054H91.5M37%2058H40M60%2058H63M8.5%2058H11M89%2058H91.5M37%2062H40M60%2062H63M8.5%2062H11M89%2062H91.5M37%2066H40M60%2066H63M8.5%2066H11M89%2066H91.5M37%2070H40M60%2070H63M8.5%2070H11M89%2070H91.5M37%2074H40M60%2074H63M8.5%2074H11M89%2074H91.5M37%2078H40M60%2078H63M8.5%2078H11M89%2078H91.5M37%2082H40M60%2082H63M8.5%2082H11M89%2082H91.5M37%2086H40M60%2086H63M8.5%2086H11M89%2086H91.5M37%2090H40M60%2090H63M8.5%2090H11M89%2090H91.5M37%2094H40M60%2094H63M8.5%2094H11M89%2094H91.5M37%2098H40M60%2098H63M8.5%2098H11M89%2098H91.5%27%20stroke%3D%27white%27%20stroke-width%3D%271.5%27%20vector-effect%3D%27non-scaling-stroke%27%20opacity%3D%27.55%27/%3E%3C/svg%3E") center/100% 100% no-repeat}
 .side{position:relative;z-index:1}
-.unit-tag{font-family:var(--px);font-size:7px;letter-spacing:2px;color:rgba(255,255,255,.5);text-align:center;margin:2px 0 6px}
-.row{display:flex;justify-content:center;gap:4px;margin:5px 0}
-.row.spread{justify-content:space-around}
-.row.wide{justify-content:space-between;padding:0 2px}
-.los{position:relative;z-index:1;height:3px;margin:9px 4px;background:repeating-linear-gradient(90deg,var(--gold) 0 12px,transparent 12px 18px)}
+.unit-tag{font-family:var(--px);font-size:7px;letter-spacing:2px;color:rgba(255,255,255,.55);text-align:center;margin:2px 0 4px}
+.row{display:flex;justify-content:center;gap:4px;margin:4px 0}
+.row.spread{justify-content:space-around;padding:0 8%}
+.row.wide{justify-content:space-between;padding:0 4px}
+.los{position:relative;z-index:1;height:3px;margin:8px 0;background:#4aa3ff;box-shadow:0 0 6px rgba(74,163,255,.6)}
 
-.slot{position:relative;width:calc((100% - 20px)/6);max-width:100px;min-width:0;height:56px;border-radius:6px;padding:4px 2px;
-  background:rgba(8,16,30,.38);border:2px dashed rgba(255,255,255,.4);
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;transition:transform .12s, border-color .12s}
-.slot .pos{font-weight:800;font-size:15px;letter-spacing:.5px;color:rgba(255,255,255,.92)}
-.slot .nm{font-weight:700;font-size:12.5px;line-height:1;text-align:center;letter-spacing:.2px;width:100%;overflow:hidden;white-space:nowrap}
-.slot .rt{position:absolute;top:-7px;right:-5px;min-width:24px;height:17px;padding:0 4px;border-radius:4px;font-weight:800;font-size:12px;line-height:17px;text-align:center;color:var(--ink);box-shadow:0 0 0 2px var(--night)}
-.field.armed .slot:not(.filled){border-color:rgba(245,183,0,.8);background:rgba(245,183,0,.10);animation:pulse 1.6s ease-in-out infinite}
-@keyframes pulse{50%{background:rgba(245,183,0,.2)}}
-.slot.filled{background:var(--night);border:2px solid #0a1120;padding-top:9px;overflow:hidden;cursor:default;animation:none}
-.slot.filled::before{content:"";position:absolute;left:0;right:0;top:0;height:6px;background:linear-gradient(90deg,var(--t1) 0 50%,var(--t2) 50% 100%)}
-.slot.filled .pos{font-size:10px;color:var(--muted);order:2}
-.slot.filled .nm{color:var(--paper)}
-.slot.filled .star{position:absolute;top:7px;right:3px;font-size:9px;color:var(--gold)}
-.slot.selected{border:2px solid var(--gold)!important;background:rgba(245,183,0,.35)!important;transform:scale(1.07);animation:none!important}
+/* a player spot: art (or an empty ring) standing on the turf, with a black name plate underneath */
+.slot{position:relative;width:calc((100% - 20px)/6);max-width:100px;min-width:0;padding:0;border:0;background:none;
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:3px;transition:transform .12s;--posc:var(--gold)}
+.slot[data-side="D"]{--posc:#5aa9ff}
+.slot[data-side="S"]{--posc:#e6ebf7}
+.slot .ph{width:46px;height:46px;margin:5px 0;border-radius:50%;border:2px dashed rgba(255,255,255,.5);background:rgba(0,0,0,.14)}
+.slot .fart{width:100%;height:56px;object-fit:contain;filter:drop-shadow(0 4px 3px rgba(0,0,0,.45))}
+.slot .plate{display:flex;flex-direction:column;align-items:center;width:100%;background:rgba(12,14,22,.92);border-radius:4px;padding:3px 3px 2px;box-shadow:0 2px 5px rgba(0,0,0,.45)}
+.slot .nm{font-weight:800;font-size:11px;line-height:1.05;color:#fff;letter-spacing:.3px;width:100%;text-align:center;white-space:nowrap;overflow:hidden}
+.slot .nm:empty{display:none}
+.slot .pos{font-weight:800;font-size:11px;line-height:1.15;letter-spacing:.4px;color:var(--posc)}
+.slot .star{position:absolute;top:0;right:3px;font-size:12px;color:var(--gold);text-shadow:0 1px 2px rgba(0,0,0,.8)}
+.slot.filled{cursor:default}
+.slot.filled .ph{display:none}
+.slot.filled:not(.has-art) .ph{display:block;border:0;background:linear-gradient(135deg,var(--t1) 50%,var(--t2) 50%);box-shadow:0 3px 4px rgba(0,0,0,.35)}
+.field.armed .slot:not(.filled) .ph,.st-wrap.armed .slot:not(.filled) .ph{border-color:var(--gold);background:rgba(245,183,0,.2);animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{50%{background:rgba(245,183,0,.38)}}
+.slot.selected{transform:scale(1.07)}
+.slot.selected .ph{border-style:solid!important;border-color:var(--gold)!important;background:rgba(245,183,0,.5)!important;animation:none!important}
+.slot.selected .plate{box-shadow:0 0 0 2px var(--gold),0 2px 5px rgba(0,0,0,.45)}
 .slot.flash{animation:land .5s cubic-bezier(.2,1.6,.4,1)}
-@keyframes land{0%{transform:scale(1.35)}100%{transform:scale(1)}}
-.st-wrap{margin:10px 0 0;background:var(--night2);border:2px solid var(--line);border-radius:10px;padding:8px 8px 10px}
-.st-wrap .unit-tag{color:var(--muted)}
-.st-wrap .slot{width:30%;max-width:120px;background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.25)}
+@keyframes land{0%{transform:scale(1.3)}100%{transform:scale(1)}}
+.st-wrap{margin:0 -10px;padding:8px 8px 12px;background:repeating-linear-gradient(180deg,#2a7f36 0 64px,#2f8a3c 64px 128px);border-top:3px solid rgba(255,255,255,.85)}
+.st-wrap .unit-tag{color:rgba(255,255,255,.6)}
+.st-wrap .slot{width:28%;max-width:110px}
 
 /* ---------- console (bottom sheet) ---------- */
 .sheet{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--night2);border-top:3px solid #0a1120;
@@ -196,18 +203,18 @@ summary{cursor:pointer;font-size:16px;font-weight:700;color:var(--gold);padding:
 .cgrades div{background:var(--night2);border:2px solid var(--line);border-radius:8px;padding:6px 2px;display:flex;flex-direction:column;align-items:center;gap:4px}
 .cgrades b{font-family:var(--px);font-size:11px;color:var(--ink);border-radius:4px;padding:4px 5px;min-width:30px}
 .cgrades span{font-size:12px;font-weight:700;color:var(--muted)}
-.cfield{border-radius:8px;padding:6px 3px;border:2px solid #e8efe9;background:repeating-linear-gradient(180deg,var(--turf1) 0 30px,var(--turf2) 30px 60px)}
+.cfield{position:relative;border-radius:6px;padding:6px 6px;border:2px solid #e8efe9;background:repeating-linear-gradient(180deg,#2f8a3c 0 40px,#2a7f36 40px 80px)}
 .crow{display:flex;justify-content:center;gap:3px;margin:3px 0}
 .crow.spread{justify-content:space-around}.crow.wide{justify-content:space-between}
-.clos{height:2px;margin:5px 2px;background:repeating-linear-gradient(90deg,var(--gold) 0 8px,transparent 8px 12px)}
-.ct{position:relative;width:calc((100% - 15px)/6);max-width:68px;height:38px;background:var(--night);border-radius:4px;overflow:hidden;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;padding:5px 2px 1px}
-.ct::before{content:"";position:absolute;left:0;right:0;top:0;height:4px;background:linear-gradient(90deg,var(--t1) 0 50%,var(--t2) 50% 100%)}
-.cn{font-weight:700;font-size:10.5px;line-height:1;color:var(--paper);width:100%;text-align:center;white-space:nowrap;overflow:hidden}
-.cp{font-size:9.5px;font-weight:700;color:var(--muted);margin-top:2px}
-.cp{display:flex;align-items:center;gap:3px}.cr{font-style:normal;font-size:9px;font-weight:800;color:var(--ink);border-radius:2px;padding:0 3px;line-height:12px}
-.cst{margin-top:6px;background:var(--night2);border:2px solid var(--line);border-radius:8px;padding:2px 3px}
-.cst .ct{width:30%;max-width:110px}
+.clos{height:2px;margin:5px 0;background:#4aa3ff}
+.ct{position:relative;width:calc((100% - 15px)/6);max-width:68px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:2px}
+.ct .cdot{width:26px;height:26px;margin:3px 0;border-radius:50%;background:linear-gradient(135deg,var(--t1) 50%,var(--t2) 50%)}
+.cplate{display:flex;flex-direction:column;align-items:center;width:100%;background:rgba(12,14,22,.92);border-radius:3px;padding:2px 2px 1px}
+.cn{font-weight:800;font-size:9.5px;line-height:1.05;color:#fff;width:100%;text-align:center;white-space:nowrap;overflow:hidden}
+.cp{font-size:9px;font-weight:800;color:var(--posc,var(--gold))}
+.ct[data-side="D"]{--posc:#5aa9ff}.ct[data-side="S"]{--posc:#e6ebf7}
+.cst{margin-top:6px;background:#2a7f36;border:2px solid #e8efe9;border-radius:6px;padding:4px 3px}
+.cst .ct{width:28%;max-width:100px}
 .cfoot{text-align:center;font-size:13px;font-weight:700;color:var(--muted);margin-top:8px}
 .cardbtns{display:flex;gap:8px;margin-top:10px}
 /* art (optional: art/001.png … art/151.png) */
@@ -216,25 +223,10 @@ summary{cursor:pointer;font-size:16px;font-weight:700;color:var(--gold);padding:
 .dart{width:100%;height:100%;object-fit:contain}
 .dart.shiny-art{filter:drop-shadow(0 0 8px rgba(245,183,0,.95))}
 .dtext{min-width:0;flex:1}
-/* field tile with art: just the art, then name and position on the open field (no box, no edges) */
-.slot.filled.has-art,body.art-on .slot.filled{height:92px}
-.slot.filled.has-art{background:transparent;border:0;padding:0;overflow:visible;justify-content:flex-start;gap:0}
-.slot.filled.has-art::before{display:none}
-.slot.filled.has-art .fart{order:0;width:100%;height:62px;object-fit:contain;margin:0;filter:drop-shadow(0 3px 3px rgba(0,0,0,.45))}
-.slot.filled.has-art .nm{order:1;margin:2px 0 0;font-size:11px;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.9),0 0 4px rgba(0,0,0,.6)}
-.slot.filled.has-art .pos{order:2;position:static;font-size:10px;font-weight:800;color:var(--gold);text-shadow:0 1px 2px rgba(0,0,0,.9)}
-.slot.filled.has-art .star{top:0;right:2px;font-size:12px;text-shadow:0 1px 2px rgba(0,0,0,.8)}
-.slot.filled.has-art.selected,.slot.filled.has-art.flash{background:transparent!important}
-.ct.has-art,body.art-on .ct{height:66px}
-.ct.has-art{background:transparent;padding:0;justify-content:flex-start;overflow:visible}
-.ct.has-art::before{display:none}
-.ct .cart{position:static;width:100%;height:42px;object-fit:contain;filter:drop-shadow(0 2px 2px rgba(0,0,0,.45))}
-.ct.has-art .cn{color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.9);margin-top:1px}
-.ct.has-art .cp{color:var(--gold);text-shadow:0 1px 2px rgba(0,0,0,.9)}
-.cst .ct.has-art .cn,.cst .ct.has-art .cp{text-shadow:none}
+.ct .cart{width:100%;height:40px;object-fit:contain;filter:drop-shadow(0 2px 2px rgba(0,0,0,.45))}
 @media(min-width:560px){
   :root{--rh:54px}
-  .slot{height:64px}.slot .pos{font-size:17px}.slot .nm{font-size:14px}
+  .slot .fart{height:72px}.slot .ph{width:58px;height:58px;margin:7px 0}.slot .pos{font-size:13px}.slot .nm{font-size:13px}
   .ri{font-size:11px}.dialog .line{font-size:11px}.logo{font-size:18px}
 }
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
@@ -538,7 +530,11 @@ for (const key in FORMULAS) {
 // Explicit position numbers win. cap = max for any position not listed. floor = min for any position not listed.
 // shift = add to every stat-based rating first. OL = OT+OG+C, LB = OLB+ILB, DL = DE+NT.
 const OVERRIDES = {
-  'Pidgey': { CB: 52, S: 50 }, 'Pidgeotto': { CB: 66, S: 64 }, 'Pidgeot': { CB: 80, S: 78, RB: 80 },
+  'Kingler': { WR: 63, SLOT: 60 },
+  'Onix': { NT: 72, DE: 52, ILB: 50, OLB: 48 },
+  'Ninetales': { CB: 78, S: 77 },
+  'Muk': { OT: 78, OG: 80, C: 79 },
+  'Pidgey': { CB: 52, S: 50 }, 'Pidgeotto': { CB: 66, S: 64 }, 'Pidgeot': { CB: 80, S: 78, RB: 80, LB: 68},
   'Rattata': { cap: 45, OLB: 47 }, 'Raticate': { cap: 60, OLB: 65 },
   'Spearow': { DE: 55, RB: 50, FB: 45, KR: 50 }, 'Fearow': { DE: 80, RB: 75, FB: 65, KR: 68 },
   'Clefairy': { NT: 52, OT: 50, cap: 48 }, 'Clefable': { NT: 70, OT: 68, cap: 65 },
@@ -550,7 +546,7 @@ const OVERRIDES = {
   'Tauros': { OLB: 89, TE: 86, FB: 78, RB: 82 },
   'Snorlax': { C: 99, OG: 99, NT: 95, OT: 86, FB: 65, cap: 78 },
   'Charmander': { WR: 58, CB: 57, S: 56, RB: 55 }, 'Charmeleon': { WR: 72, CB: 71, S: 70, RB: 66 }, 'Charizard': { WR: 86, CB: 85, S: 84 },
-  'Growlithe': { RB: 66, DE: 64, WR: 62 }, 'Arcanine': { RB: 90, DE: 88 },
+  'Growlithe': { RB: 66, DE: 64, WR: 62 }, 'Arcanine': { RB: 90, DE: 88, KR: 89},
   'Ponyta': { WR: 73, CB: 71, S: 69, RB: 67 }, 'Rapidash': { WR: 85, CB: 80, RB: 82 },
   'Magmar': { QB: 70, WR: 70, RB: 73 },
   'Eevee': { KR: 62, SLOT: 56, RB: 52 },
@@ -558,16 +554,16 @@ const OVERRIDES = {
   'Jolteon': { KR: 96, SLOT: 92, RB: 81, WR: 80 },
   'Vaporeon': { KR: 80, SLOT: 80, QB: 85, RB: 76, C: 55, WR: 70 },
   'Squirtle': { FB: 52 }, 'Wartortle': { FB: 63, OT: 65, DE: 62 },
-  'Blastoise': { OT: 82, OG: 87, C: 80, DE: 68, NT: 78 },
-  'Golduck': { FB: 76, RB: 68, OT: 65 },
+  'Blastoise': { OT: 82, OG: 87, C: 86, DE: 68, NT: 78 },
+  'Golduck': { FB: 76, RB: 68, OT: 65, LB: 70},
   'Poliwhirl': { CB: 70, OLB: 70, ILB: 70, FB: 68 }, 'Poliwrath': { OT: 84, NT: 84, DE: 82, OG: 82 },
-  'Tentacruel': { QB: 80, CB: 83, S: 80 },
+  'Tentacruel': { QB: 80, CB: 83, S: 86 },
   'Slowbro': { OG: 78, NT: 78, OT: 72, C: 74 },
   'Dewgong': { QB: 70, OT: 78, DE: 78 },
   'Cloyster': { OT: 95, OG: 95, C: 92, cap: 82 },
-  'Gyarados': { K: 70, P: 72, DE: 90, TE: 85, S: 80 },
+  'Gyarados': { K: 70, P: 72, DE: 90, TE: 85, S: 80, RB: 80},
   'Bulbasaur': { QB: 65, OL: 70 }, 'Ivysaur': { QB: 72, OL: 79 }, 'Venusaur': { QB: 80, OL: 88 },
-  'Bellsprout': { K: 52, P: 50 }, 'Weepinbell': { K: 62, P: 60 }, 'Victreebel': { K: 70, P: 68 },
+  'Bellsprout': { K: 52, P: 50 }, 'Weepinbell': { K: 62, P: 60 }, 'Victreebel': { K: 78, P: 72 },
   'Exeggutor': { QB: 60, OT: 83, DE: 83 },
   'Tangela': { shift: -5 },
   'Pikachu': { QB: 70, WR: 67 }, 'Raichu': { QB: 77, WR: 75 },
@@ -576,16 +572,16 @@ const OVERRIDES = {
   'Electabuzz': { WR: 84, TE: 82, S: 72, QB: 72 },
   'Jynx': { TE: 65, K: 68, P: 68, cap: 55 },
   'Articuno': { QB: 93, CB: 90, S: 87, floor: 78 },
-  'Mankey': { DE: 58, LB: 62, TE: 52 }, 'Primeape': { DE: 78, LB: 82, TE: 70 },
+  'Mankey': { DE: 58, LB: 66, TE: 52 }, 'Primeape': { DE: 78, LB: 82, TE: 70 },
   'Machop': { ILB: 68, OLB: 66, TE: 66, FB: 68, QB: 62 }, 'Machoke': { ILB: 82, OLB: 80, TE: 80, FB: 82, QB: 76 },
   'Machamp': { ILB: 95, OLB: 92, TE: 93, FB: 95, QB: 89 },
-  'Hitmonlee': { K: 92, P: 90, WR: 72, CB: 72 }, 'Hitmonchan': { K: 86, P: 85, WR: 70, CB: 70 },
+  'Hitmonlee': { K: 92, P: 90, WR: 72, CB: 72 }, 'Hitmonchan': { K: 86, P: 85, WR: 70, CB: 70, ILB: 85, OLB: 82 },
   'Ekans': { DE: 48, OLB: 48, cap: 42 }, 'Arbok': { DE: 68, OLB: 68, cap: 58 },
   'Nidoran♀': { DE: 58 }, 'Nidoran♂': { DE: 60 },
   'Nidorina': { DE: 68, OT: 70, NT: 70, FB: 68 }, 'Nidorino': { DE: 70, OT: 68, NT: 68, FB: 70, LB: 65 },
-  'Nidoqueen': { OT: 86, NT: 86, FB: 84, DE: 80 }, 'Nidoking': { OT: 86, NT: 85, FB: 86, DE: 82 },
+  'Nidoqueen': { OT: 86, OG: 85, NT: 86, FB: 84, DE: 80 }, 'Nidoking': { OT: 86, OG: 83, NT: 85, FB: 86, DE: 82 },
   'Zubat': { cap: 45 }, 'Golbat': { cap: 60 },
-  'Sandslash': { FB: 84, DE: 82 },
+  'Sandslash': { FB: 84, DE: 82, ILB: 78, OLB: 76},
   'Diglett': { cap: 55 }, 'Dugtrio': { cap: 70 },
   'Cubone': { DE: 62, LB: 62, FB: 62, RB: 55 }, 'Marowak': { DE: 78, LB: 78, FB: 78, RB: 70 },
   'Rhyhorn': { FB: 86, OG: 84, OT: 81, C: 79, NT: 86, DE: 81, ILB: 83 },
@@ -601,24 +597,92 @@ const OVERRIDES = {
   'Geodude': { shift: 4, OL: 70, DE: 66 }, 'Graveler': { shift: 4, OG: 82, C: 82, OT: 78, DE: 74, NT: 80 },
   'Golem': { shift: 4, OG: 94, C: 94, OT: 88, NT: 92 },
   'Aerodactyl': { cap: 88 },
-  'Gastly': { LB: 64 }, 'Haunter': { LB: 76 }, 'Gengar': { OLB: 88, ILB: 86 },
+  'Gastly': { LB: 64 }, 'Haunter': { LB: 65 }, 'Gengar': { OLB: 88, ILB: 86 },
 };
+// ---------- Traits: what a Pokémon's body and personality bring to football ----------
+// Each trait adds to specific positions. The total trait boost is capped, and hand-tuned numbers above always win.
+const TRAIT_BONUS = {
+  arms:   { OT: 6, OG: 6, C: 3, DE: 6, OLB: 4, ILB: 4, TE: 5, WR: 3, SLOT: 2, S: 4, CB: 3 },   // extra arms, tentacles, vines, a pouch buddy
+  blades: { CB: 8, S: 5, OLB: 5, ILB: 4, DE: 3 },                                            // blades, claws, pincers: jam, strip, punch out
+  hitter: { ILB: 8, OLB: 8, DE: 4, S: 3, FB: 4 },                                            // fighters who live for contact
+  big:    { OT: 5, OG: 5, C: 5, NT: 4, DE: 4, TE: 3, FB: 3 },                                // huge bodies
+  brain:  { QB: 5, C: 4, S: 4, ILB: 3 },                                                     // high football IQ
+  wings:  { WR: 4, TE: 4, S: 4, KR: 2 },                                                     // goes up and gets it
+  speed:  { KR: 3, SLOT: 4, WR: 3, RB: 3, CB: 3 },                                           // blazing fast
+  hands:  { WR: 4, SLOT: 3, TE: 3, QB: 2 },                                                  // real hands that catch
+  shadow: { S: 5, CB: 4 },                                                                   // ghosts bait throws and vanish into coverage
+  gentle: { OT: -3, OG: -3, C: -3, FB: -4 },
+  nohands:{ WR: -4, SLOT: -3, TE: -3 },
+  wetball:{ WR: -4, SLOT: -4, TE: -4, QB: -4 },                                             // the ball comes back soaked                                                     // fast fliers with nothing to catch with                                                 // too nice to bury people on run blocks
+};
+const TRAIT_CAP = 8;
+const TRAITS = {
+  Venomoth: ['nohands'],
+  Golbat: ['nohands'],
+  Zubat: ['nohands'],
+  Beedrill: ['nohands'],
+  Dodrio: ['nohands'],
+  Doduo: ['nohands'],
+  Spearow: ['nohands'],
+  Pidgey: ['nohands'],
+  Bulbasaur: ['arms'], Ivysaur: ['arms'], Venusaur: ['arms', 'big'], Bellsprout: ['arms'], Weepinbell: ['arms'], Victreebel: ['arms'],
+  Tangela: ['arms'], Tentacool: ['arms'], Tentacruel: ['arms'], Lickitung: ['arms', 'wetball'], Kangaskhan: ['arms', 'big'],
+  Machop: ['hitter'], Machoke: ['hitter'], Machamp: ['arms', 'hitter', 'big'],
+  Scyther: ['blades', 'speed'], Kabutops: ['blades'], Pinsir: ['blades', 'hitter'], Krabby: ['blades'], Kingler: ['blades'],
+  Sandshrew: ['blades'], Sandslash: ['blades'], Paras: ['blades'], Parasect: ['blades'],
+  Hitmonchan: ['hitter', 'hands'], Hitmonlee: ['hitter'], Mankey: ['hitter'], Primeape: ['hitter'], Poliwrath: ['hitter'],
+  Tauros: ['hitter'], Nidoking: ['big', 'hitter'], Nidoqueen: ['big'], Rhyhorn: ['big'], Rhydon: ['big', 'hitter'],
+  Snorlax: ['big'], Golem: ['big'], Graveler: ['big'], Onix: ['big'], Lapras: ['big', 'gentle'], Blastoise: ['big'],
+  Gyarados: ['big'], Slowbro: ['big'], Muk: ['big'], Exeggutor: ['big'], Cloyster: ['big'],
+  Abra: ['brain'], Kadabra: ['brain'], Alakazam: ['brain', 'hands'], Hypno: ['brain'], Mewtwo: ['brain'], Mew: ['brain'], Porygon: ['brain'],
+  Charizard: ['wings'], Dragonite: ['wings', 'big', 'gentle'], Pidgeot: ['wings', 'nohands'], Pidgeotto: ['wings', 'nohands'], Fearow: ['wings', 'nohands'],
+  Aerodactyl: ['wings', 'speed'], Zapdos: ['wings'], Moltres: ['wings'], Articuno: ['wings'], Butterfree: ['wings', 'nohands'],
+  Electrode: ['speed'], Voltorb: ['speed'], Jolteon: ['speed'], Arcanine: ['speed', 'big'], Rapidash: ['speed'], Ponyta: ['speed'],
+  Persian: ['speed'], Dugtrio: ['speed'], Raichu: ['speed', 'hands'], Pikachu: ['speed'], Ninetales: ['speed'], Starmie: ['speed'],
+  Electabuzz: ['hands', 'speed'], Magmar: ['hands'], Jynx: ['hands'], 'Mr. Mime': ['hands', 'brain'],
+  Gastly: ['shadow'], Haunter: ['shadow'], Gengar: ['shadow'],
+  Chansey: ['gentle'], Clefable: ['gentle'], Wigglytuff: ['gentle'],
+};
+for (const n of Object.keys(TRAITS)) if (!DEX.some(p => p.name === n)) throw new Error('Unknown Pokémon in TRAITS: ' + n);
+function traitBonus(name, key) {
+  const b = (TRAITS[name] || []).reduce((a, t) => a + ((TRAIT_BONUS[t] || {})[key] || 0), 0);
+  return Math.max(-TRAIT_CAP, Math.min(TRAIT_CAP, b));
+}
 const GROUP_KEYS = { OL: ['OT', 'OG', 'C'], LB: ['OLB', 'ILB'], DL: ['DE', 'NT'] };
-for (const [name, o] of Object.entries(OVERRIDES)) {
-  const i = DEX.findIndex(p => p.name === name);
-  if (i < 0) throw new Error('Unknown Pokémon in OVERRIDES: ' + name);
-  const explicit = {};
+for (const n of Object.keys(OVERRIDES)) if (!DEX.some(p => p.name === n)) throw new Error('Unknown Pokémon in OVERRIDES: ' + n);
+DEX.forEach((p, i) => {
+  const o = OVERRIDES[p.name] || {}, explicit = {};
   for (const [k, v] of Object.entries(o)) {
     if (k in GROUP_KEYS) GROUP_KEYS[k].forEach(g => explicit[g] = v);
     else if (FORMULAS[k]) explicit[k] = v;
   }
   for (const key in FORMULAS) {
-    let r = RATING[key][i] + (o.shift || 0);
+    let r = RATING[key][i] + (o.shift || 0) + traitBonus(p.name, key);
     if (o.cap != null) r = Math.min(r, o.cap);
     if (o.floor != null) r = Math.max(r, o.floor);
     if (key in explicit) r = explicit[key];
     RATING[key][i] = Math.max(20, Math.min(99, r));
   }
+});
+
+// ---------- Chemistry: pairs that play better side by side ----------
+// Same evolution family, or a known duo, lined up in the same position group (OL, DL, LB, DB, receivers) = +3 each.
+const FAMILIES = [[1,3],[4,6],[7,9],[10,12],[13,15],[16,18],[19,20],[21,22],[23,24],[25,26],[27,28],[29,31],[32,34],[35,36],[37,38],[39,40],[41,42],[43,45],[46,47],[48,49],[50,51],[52,53],[54,55],[56,57],[58,59],[60,62],[63,65],[66,68],[69,71],[72,73],[74,76],[77,78],[79,80],[81,82],[84,85],[86,87],[88,89],[90,91],[92,94],[96,97],[98,99],[100,101],[102,103],[104,105],[109,110],[111,112],[116,117],[118,119],[120,121],[129,130],[133,136],[138,139],[140,141],[147,149]];
+const FAMILY_OF = {}; FAMILIES.forEach(([a, b], f) => { for (let d = a; d <= b; d++) FAMILY_OF[d] = f; });
+const DUOS = [['Nidoking', 'Nidoqueen'], ['Hitmonlee', 'Hitmonchan'], ['Scyther', 'Pinsir'], ['Kabutops', 'Omastar'], ['Articuno', 'Zapdos'], ['Zapdos', 'Moltres'], ['Articuno', 'Moltres'], ['Mew', 'Mewtwo']];
+const CHEM_BONUS = 3;
+const CHEM_GROUP = { LT: 'OL', LG: 'OL', C: 'OL', RG: 'OL', RT: 'OL', DE1: 'DL', NT: 'DL', DE2: 'DL', OLB1: 'LB', ILB1: 'LB', ILB2: 'LB', OLB2: 'LB',
+  CB1: 'DB', CB2: 'DB', S1: 'DB', S2: 'DB', WR1: 'REC', SLOT: 'REC', TE: 'REC' };
+function chemistryPairs(picks) {
+  const ids = Object.keys(CHEM_GROUP).filter(id => picks[id]), pairs = [];
+  for (let i = 0; i < ids.length; i++) for (let j = i + 1; j < ids.length; j++) {
+    const a = ids[i], b = ids[j]; if (CHEM_GROUP[a] !== CHEM_GROUP[b]) continue;
+    const pa = DEX[picks[a].dex - 1], pb = DEX[picks[b].dex - 1];
+    const fam = FAMILY_OF[pa.dex] != null && FAMILY_OF[pa.dex] === FAMILY_OF[pb.dex];
+    const duo = DUOS.some(([x, y]) => (x === pa.name && y === pb.name) || (x === pb.name && y === pa.name));
+    if (fam || duo) pairs.push({ a, b, names: [pa.name, pb.name], group: CHEM_GROUP[a] });
+  }
+  return pairs;
 }
 function baseRating(dex, slotId) { return RATING[SLOT_BY_ID[slotId].f][dex - 1]; }
 function shinyEarned(dex, slotId) { return baseRating(dex, slotId) >= SHINY_FIT; }
@@ -629,8 +693,10 @@ function rating(dex, slotId, shiny) {
 // "% of perfect" measured from a replacement-level team (BASELINE) up to the perfect lineup, so the number tracks the record.
 const BASELINE = 60;
 const toPct = (v, best) => Math.max(0, Math.min(1, (v - BASELINE) / (best - BASELINE)));
+function chemBonusFor(picks) { const b = {}; for (const pr of chemistryPairs(picks)) { b[pr.a] = (b[pr.a] || 0) + CHEM_BONUS; b[pr.b] = (b[pr.b] || 0) + CHEM_BONUS; } return b; }
 function teamOVR(picks) { // picks: {slotId: {dex, shiny}}
-  let t = 0; for (const s of SLOTS) { const p = picks[s.id]; if (p) t += s.imp * rating(p.dex, s.id, p.shiny); }
+  const chem = chemBonusFor(picks);
+  let t = 0; for (const s of SLOTS) { const p = picks[s.id]; if (p) t += s.imp * Math.min(99, rating(p.dex, s.id, p.shiny) + Math.min(chem[s.id] || 0, CHEM_BONUS)); }
   return t / IMP_SUM;
 }
 
@@ -902,10 +968,48 @@ const STAGE_FLAVOR = {
   good: { 'L': ['{N} is a legendary for a reason.'] },
 };
 const OL = ['OT', 'OG', 'C'], DL = ['DE', 'NT'], SPEEDY = ['WR', 'SLOT', 'CB', 'KR', 'RB', 'S'], BIG = ['OT', 'OG', 'C', 'NT', 'FB'];
+const TRAIT_FLAVOR = {
+  good: {
+    arms:   ['{N} has more arms than the guy across from him. Simple math.', 'Extra arms, extra reach. {N} won every hand fight.', '{N} wrapped up anything that came near him.'],
+    blades: ['{N} jams receivers with blade hands at the line. Nobody gets a clean release.', 'Blades out. {N} punched the ball loose all season.'],
+    hitter: ['{N} is the biggest hitter on the field. Fumbles everywhere.', '{N} lives for contact. Ball carriers felt it the next morning.'],
+    big:    ['{N} is enormous. You don\'t go through him, you go around. Slowly.', 'Nobody moves {N}. Nobody even tries anymore.'],
+    brain:  ['{N} has the highest football IQ in the building. Reads everything.', '{N} sees the play before the snap.'],
+    wings:  ['{N} just flies up and takes the ball away. Red zone nightmare.', 'Wings beat hands. {N} won every jump ball.'],
+    speed:  ['{N} is the fastest guy on the field. Coverage can\'t keep up.', 'Blink and {N} is gone.'],
+    hands:  ['{N} has real hands and knows how to use them. Strong catches, big YAC.', '{N} snatches the ball out of the air.'],
+    shadow: ['{N} baits the throw from the shadows, then jumps it. Pick six.', '{N} vanishes in coverage and reappears with the ball.'],
+  },
+  bad: {
+    gentle: ['{N} is just too nice to bury anybody on a run block.', '{N} apologizes after every block. Effort was a question.'],
+  },
+};
+const REC_F = ['WR', 'SLOT', 'TE'], DB_F = ['CB', 'S'], LB_F = ['OLB', 'ILB'], KICK_F = ['K', 'P'];
+const NO_HANDS = ['Pidgey', 'Pidgeotto', 'Pidgeot', 'Spearow', 'Fearow', 'Doduo', 'Dodrio', 'Beedrill', 'Butterfree', 'Zubat', 'Golbat', 'Venomoth'];
+function noteSpecial(name, f) {
+  if (NO_HANDS.includes(name) && REC_F.includes(f)) return `${name} is fast as heck but has no hands. The ball keeps bouncing off his wings.`;
+  if (name === 'Gyarados' && f === 'RB') return 'Gyarados has all the power in the world, but shiftier backs keep stealing his carries.';
+  if (name === 'Muk' && OL.includes(f)) return 'Muk is the first guy off the bench on the line, but he\'s so sticky he draws a holding call every drive.';
+  if (name === 'Sandslash' && LB_F.includes(f)) return 'Sandslash is undersized for linebacker. Works in a 3-man front, gets swallowed up by the big guys otherwise.';
+  if (name === 'Rapidash' && f === 'RB') return 'Rapidash is a great committee back. Fresh legs every series.';
+  if (name === 'Ninetales' && DB_F.includes(f)) return 'Ninetales plays coverage with all nine tails facing the receiver. Pass interference all day.';
+  if (name === 'Onix' && DL.concat(LB_F).includes(f)) return 'Onix has the size to start up front, but with no arms he misses every tackle.';
+  if (name === 'Kingler' && REC_F.includes(f)) return 'Kingler keeps going for the one-claw grab. One highlight a month, drops the rest.';
+  if (name === 'Exeggutor') return 'The helmet situation is a mess. One of the heads insists on wearing a Guardian Cap.';
+  if (name === 'Lickitung' && REC_F.concat(KICK_F, ['QB']).includes(f)) return 'Lickitung gets the ball way too wet. Nobody can grip it.';
+  if (name === 'Wheezing') return 'Wheezing takes a lot of plays off for his inhaler, but the effort is never in question.';
+  if (name === 'Dugtrio') return 'Dugtrio is only effective on grass fields, and the team keeps getting fined for digging up the turf.';
+  return null;
+}
 function pickLine(lines, seed) { return lines[hashStr(seed) % lines.length]; }
 function flavorFor(p, f, tone, seed) {
   const g = GROUP_OF[f], name = p.name, opts = [];
+  const ns = noteSpecial(name, f);
+  if (ns) return ns;
   const sp = SPECIAL[name] && SPECIAL[name](f);
+  const traitLines = (TRAITS[name] || []).filter(t => ((TRAIT_BONUS[t] || {})[f] || 0) * (tone === 'good' ? 1 : -1) > 0)
+    .flatMap(t => (TRAIT_FLAVOR[tone] && TRAIT_FLAVOR[tone][t]) || []);
+  if (traitLines.length && (!sp || hashStr(seed + 't') % 2)) return pickLine(traitLines, seed).replace(/\{N\}/g, name);
   if (sp) return sp;
   for (const t of p.types) {
     const tf = TYPE_FLAVOR[t] && TYPE_FLAVOR[t][tone];
@@ -927,7 +1031,6 @@ function scoutNote(slotId, pick) {
   const r = rating(pick.dex, slotId, pick.shiny);
   const tone = r >= 80 ? 'good' : r < 64 ? 'bad' : 'meh';
   let text = tone === 'meh' ? flavorFor(p, f, r >= 72 ? 'good' : 'bad', slotId + p.name) : flavorFor(p, f, tone, slotId + p.name);
-  if (pick.shiny) text += shinyEarned(pick.dex, slotId) ? ' ★ Shiny bonus earned.' : ' ★ Shiny, but out of position. No bonus.';
   return { slotId, pos: s.pos, name: p.name, r, tone, text };
 }
 function scoutingReport(picks) {
@@ -935,20 +1038,21 @@ function scoutingReport(picks) {
   const hits = notes.filter(n => n.tone === 'good').sort((a, b) => b.r - a.r).slice(0, 5);
   const misses = notes.filter(n => n.tone === 'bad').sort((a, b) => a.r - b.r).slice(0, 5);
   const shiny = notes.find(n => picks[n.slotId].shiny) || null;
-  return { notes, hits, misses, shiny };
+  const GROUP_NAME = { OL: 'on the offensive line', DL: 'on the defensive line', LB: 'at linebacker', DB: 'in the secondary', REC: 'in the passing game' };
+  const chemistry = chemistryPairs(picks).map(pr => `${pr.names[0]} and ${pr.names[1]} fed off each other ${GROUP_NAME[pr.group]}.`);
+  return { notes, hits, misses, shiny, chemistry };
 }
 // ENGINE END
 
 // ===================== UI =====================
 const $ = s => document.querySelector(s);
-const SAVE_KEY = 'gridiron151_v4';
+const SAVE_KEY = 'gridiron151_v5';
 const RESPINS = 5;
 let state = freshState();
 let busy = false;
 
 function freshState() {
-  return { picks: {}, respins: { type: RESPINS, stage: RESPINS, poke: RESPINS }, cur: null, sel: null, done: false,
-    shinyPick: 1 + Math.floor(Math.random() * 25) }; // one random pick per game is shiny
+  return { picks: {}, respins: { type: RESPINS, stage: RESPINS, poke: RESPINS }, cur: null, sel: null, done: false};
 }
 function save() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(state)); } catch (e) {} }
 function load() {
@@ -1067,15 +1171,14 @@ async function runReels(changes) {
   jobs.push(animReel('poke', c.dex, d, c.shiny, c.type));
   await Promise.all(jobs);
   busy = false;
-  if (c.shiny && changes.first) toast(`★ This is your shiny spin! Put it in the right spot for a bonus.`);
-  else if (c.stage === 'L') toast(`A legendary ${UP(P(c.dex).name)} appeared!`);
+  if (c.stage === 'L') toast(`A legendary ${UP(P(c.dex).name)} appeared!`);
   render();
 }
 
 // ---------- actions ----------
 async function spin() {
   const t = pickType(null), s = pickStage(t), p = pickPoke(t, s);
-  state.cur = { type: t, stage: s, dex: p.dex, shiny: pickNumber() === state.shinyPick }; state.sel = null; save();
+  state.cur = { type: t, stage: s, dex: p.dex, shiny: false }; state.sel = null; save();
   await runReels({ type: 1, stage: 1, first: 1 });
 }
 async function respin(kind) {
@@ -1088,7 +1191,7 @@ async function respin(kind) {
   } else if (kind === 'stage') {
     c.stage = pickStage(c.type, c.stage); changes.stage = 1;
   }
-  c.dex = pickPoke(c.type, c.stage, kind === 'poke' ? c.dex : undefined).dex; // a shiny spin stays shiny through respins
+  c.dex = pickPoke(c.type, c.stage, kind === 'poke' ? c.dex : undefined).dex;
   state.respins[kind]--; state.sel = null; save();
   await runReels(changes);
 }
@@ -1115,8 +1218,8 @@ function buildField() {
   document.querySelectorAll('[data-row]').forEach(r => r.innerHTML = '');
   for (const s of SLOTS) {
     const b = document.createElement('button');
-    b.className = 'slot'; b.dataset.id = s.id;
-    b.innerHTML = `<span class="pos">${s.pos}</span><span class="nm"></span>`;
+    b.className = 'slot'; b.dataset.id = s.id; b.dataset.side = s.row[0] === 'd' ? 'D' : s.row === 'st' ? 'S' : 'O';
+    b.innerHTML = `<span class="ph"></span><span class="plate"><span class="nm"></span><span class="pos">${s.pos}</span></span>`;
     b.addEventListener('click', () => selectSlot(s.id));
     document.querySelector(`[data-row="${s.row}"]`).appendChild(b);
   }
@@ -1166,11 +1269,11 @@ function renderInfo() {
   const pills = p.types.map(t => `<span class="tpill" style="--c:${TYPES[t].c}">${UP(t)}</span>`).join('');
   const stats = [['HP', p.hp], ['ATK', p.atk], ['DEF', p.def], ['SPC', p.spc], ['SPD', p.spe]].map(([k, v]) =>
     `<div class="st"><div class="k">${k}<b>${v}</b></div><div class="bar"><i style="width:${Math.min(100, v / 1.6)}%;background:${statColor(v)}"></i></div></div>`).join('');
-  const verb = c.shiny ? 'A shiny' : c.stage === 'L' ? 'A legendary' : 'A wild';
-  const art = artImg(p.dex, 'dart' + (c.shiny ? ' shiny-art' : ''));
+  const verb = c.stage === 'L' ? 'A legendary' : 'A wild';
+  const art = artImg(p.dex, 'dart');
   info.innerHTML = `<div class="dtop">${art ? `<div class="dartbox">${art}</div>` : ''}<div class="dtext">
       <div class="line">${verb} <span class="nm">${UP(p.name)}</span> appeared!</div>
-      <div class="mon" style="margin-top:6px"><span class="dexno">No.${String(p.dex).padStart(3, '0')}</span>${pills}${c.shiny ? '<span class="shiny">★ SHINY</span>' : ''}</div>
+      <div class="mon" style="margin-top:6px"><span class="dexno">No.${String(p.dex).padStart(3, '0')}</span>${pills}</div>
     </div></div>
     <div class="stats">${stats}</div>`;
 }
@@ -1232,7 +1335,6 @@ function showResults() {
   }).join('');
   const finishBanner = res.champ ? `<div class="banner">★ ${UP(res.finish)} ★</div>` :
     `<div class="finish ${res.seed ? 'in' : 'out'}">${res.seed ? `#${res.seed} seed · ` : ''}${res.finish}</div>`;
-  const shinyBox = scout.shiny ? `<div class="note ${shinyEarned(state.picks[scout.shiny.slotId].dex, scout.shiny.slotId) ? 'good' : 'bad'}"><div class="nh"><span class="tone"></span><b>★ SHINY ${UP(scout.shiny.name)}</b> at ${scout.shiny.pos}</div><div>${shinyEarned(state.picks[scout.shiny.slotId].dex, scout.shiny.slotId) ? 'Placed in a great spot. The shiny bonus kicked in all season.' : 'Wrong spot for this one. The shiny bonus never kicked in.'}</div></div>` : '';
   $('#results').innerHTML = `
     <button class="mclose" data-close>×</button>
     <h2>SEASON REPORT</h2>
@@ -1250,7 +1352,7 @@ function showResults() {
     <h3>Report card</h3>
     <div class="cards3">${units.map(u => `<div class="kpi"><b style="color:${gColor(u.grade)}">${u.grade}</b><span>${u.name}</span></div>`).join('')}</div>
     <p>Season MVP: <b>${UP(mvp.name)}</b> at ${mvp.pos}.</p>
-    ${shinyBox ? `<h3>Shiny pick</h3>${shinyBox}` : ''}
+    ${scout.chemistry.length ? `<h3>Chemistry</h3>${scout.chemistry.map(t => `<div class="note good"><div class="nh"><span class="tone"></span><b>CHEMISTRY BONUS</b></div><div>${t}</div></div>`).join('')}` : ''}
     ${scout.hits.length ? `<h3>Smart picks</h3>${scout.hits.map(noteHTML).join('')}` : ''}
     ${scout.misses.length ? `<h3>Questionable calls</h3>${scout.misses.map(noteHTML).join('')}` : ''}
     <h3>Unit breakdown</h3>${unitCards}
@@ -1274,7 +1376,8 @@ async function share(res, units, mvp) {
 function showCard(res, units, mvp) {
   const tile = s => {
     const pk = state.picks[s.id], p = P(pk.dex), art = artImg(p.dex, 'cart');
-    return `<div class="ct${art ? ' has-art' : ''}" style="--t1:${TYPES[p.types[0]].c};--t2:${TYPES[p.types[1] || p.types[0]].c}">${art}<span class="cn">${UP(p.name)}</span><span class="cp">${s.pos}${pk.shiny ? ' ★' : ''}</span></div>`;
+    const side = s.row[0] === 'd' ? 'D' : s.row === 'st' ? 'S' : 'O';
+    return `<div class="ct" data-side="${side}" style="--t1:${TYPES[p.types[0]].c};--t2:${TYPES[p.types[1] || p.types[0]].c}">${art || '<span class="cdot"></span>'}<span class="cplate"><span class="cn">${UP(p.name)}</span><span class="cp">${s.pos}</span></span></div>`;
   };
   const row = (id, cls = '') => `<div class="crow ${cls}">${SLOTS.filter(s => s.row === id).map(tile).join('')}</div>`;
   const finish = res.champ ? 'INDIGO BOWL CHAMPIONS' : res.seed ? `#${res.seed} SEED · ${UP(res.finish)}` : UP(res.finish);
@@ -1321,7 +1424,8 @@ function buildHelp() {
       <li><b>Spin</b> to roll a <b>type</b>, then an <b>evolution stage</b>, then a <b>Pokémon</b> that matches both.</li>
       <li>Tap an open spot on the field, then <b>Place</b>. Once placed, a Pokémon can't move.</li>
       <li>Each Pokémon can only be picked once. Other members of its evolution line are still in play.</li>
-      <li>Use each Pokémon's stats to decide where it fits. Nobody tells you if it's a good spot until the season is over.</li>
+      <li>Think like a GM. Stats matter, but so does the Pokémon itself: extra arms, blades, wings, size, speed and smarts all help at the right spot. Nobody tells you if it's a good fit until the season is over.</li>
+      <li><b>Chemistry:</b> some Pokémon play better next to each other. Find the pairs.</li>
     </ul>
     <h3>Respins (5 of each per game)</h3>
     <ul>
@@ -1335,8 +1439,6 @@ function buildHelp() {
       <li>Stage 1 ${pct('1')} · Stage 2 ${pct('2')} · Stage 3 ${pct('3')} · Legendary ${pct('L')}. Only stages that exist for that type can land.</li>
       <li>Pokémon that never evolve count as Stage 1. The legendaries are Articuno, Zapdos, Moltres, Mewtwo and Mew.</li>
     </ul>
-    <h3>The shiny spin</h3>
-    <p>One random spin each game is shiny. It could be your 2nd pick or your 20th. Put it in a spot that suits it and it gets a boost all season. Put it somewhere it doesn't fit and the boost never kicks in. You'll find out which in your season report.</p>
     <h3>The season</h3>
     <p>You play 17 games against teams that range from easy to elite. Win 10 or more to make the playoffs, and 14 or more earns the #1 seed and a bye. Then it's Wild Card Weekend, the Divisional Round, Championship Sunday and the Indigo Bowl. The same lineup always gets the same season.</p>
     <p>Afterward you get a report card: grades for offense, defense and special teams, your MVP, and your smartest picks and most questionable calls.</p>`;
