@@ -211,13 +211,22 @@ summary{cursor:pointer;font-size:16px;font-weight:700;color:var(--gold);padding:
 .cfoot{text-align:center;font-size:13px;font-weight:700;color:var(--muted);margin-top:8px}
 .cardbtns{display:flex;gap:8px;margin-top:10px}
 /* art (optional: art/001.png … art/151.png) */
-.dart{float:right;width:72px;height:72px;object-fit:contain;margin:-4px -4px 0 8px;image-rendering:auto}
-.dart.shiny-art{filter:drop-shadow(0 0 6px rgba(245,183,0,.9))}
-.fart,.cart{display:block;object-fit:contain;flex:none}
-.fart{width:30px;height:30px;margin-top:-2px}
-.cart{width:20px;height:20px;margin-bottom:1px}
-body.art-on .slot.filled{height:76px}
-body.art-on .ct{height:52px}
+.dtop{display:flex;align-items:center;gap:10px}
+.dartbox{flex:none;width:96px;height:96px;border-radius:8px;background:radial-gradient(circle at 50% 60%,#e3e8f4,#f6f7fb 70%);display:flex;align-items:center;justify-content:center}
+.dart{width:100%;height:100%;object-fit:contain}
+.dart.shiny-art{filter:drop-shadow(0 0 8px rgba(245,183,0,.95))}
+.dtext{min-width:0;flex:1}
+/* field tile with art: the art fills the tile, name sits on a strip at the bottom, position tag top-left */
+.slot.filled.has-art,body.art-on .slot.filled{height:84px}
+.slot.filled.has-art{padding:6px 0 0;justify-content:flex-end}
+.slot.filled.has-art .fart{position:absolute;inset:7px 2px 18px 2px;width:calc(100% - 4px);height:calc(100% - 25px);object-fit:contain}
+.slot.filled.has-art .nm{position:relative;z-index:1;background:rgba(10,17,32,.85);padding:2px 1px 3px;margin:0;font-size:10px}
+.slot.filled.has-art .pos{position:absolute;top:8px;left:3px;z-index:1;font-size:8.5px;background:rgba(10,17,32,.8);border-radius:3px;padding:0 3px;color:var(--paper)}
+.ct.has-art,body.art-on .ct{height:62px}
+.ct.has-art{justify-content:flex-end;padding:5px 0 0}
+.ct .cart{position:absolute;inset:5px 1px 22px 1px;width:calc(100% - 2px);height:calc(100% - 27px);object-fit:contain}
+.ct.has-art .cn,.ct.has-art .cp{position:relative;z-index:1}
+.ct.has-art .cn{background:rgba(10,17,32,.85);padding:1px 0}
 @media(min-width:560px){
   :root{--rh:54px}
   .slot{height:64px}.slot .pos{font-size:17px}.slot .nm{font-size:14px}
@@ -459,9 +468,12 @@ const TYPES = {
 };
 const TYPE_LIST = Object.keys(TYPES);
 const STAGES = ['1', '2', '3', 'L'];
-const STAGE_WEIGHT = { '1': 40, '2': 35, '3': 20, 'L': 5 };
+const STAGE_WEIGHT = { '1': 35, '2': 30, '3': 25, 'L': 15 };
 const STAGE_LABEL = { '1': 'Stage 1', '2': 'Stage 2', '3': 'Stage 3', 'L': 'Legendary' };
-const SHINY_ODDS = 1 / 15, SHINY_BONUS = 5;
+const SHINY_BONUS = 8, SHINY_FIT = 75; // one shiny pick per game; bonus only lands if it's placed in a good-fit spot
+// The type reel folds Dragon into Flying (only three Dragon Pokémon exist).
+const REEL_TYPES = Object.keys(TYPES).filter(t => t !== 'Dragon');
+const reelTypesOf = p => [...new Set(p.types.map(t => t === 'Dragon' ? 'Flying' : t))];
 
 // Position formulas: weights on Gen 1 base stats (HP capped at 150 so Chansey isn't an All-Pro tackle)
 const FORMULAS = {
@@ -565,7 +577,7 @@ const OVERRIDES = {
   'Hitmonlee': { K: 92, P: 90, WR: 72, CB: 72 }, 'Hitmonchan': { K: 86, P: 85, WR: 70, CB: 70 },
   'Ekans': { DE: 48, OLB: 48, cap: 42 }, 'Arbok': { DE: 68, OLB: 68, cap: 58 },
   'Nidoran♀': { DE: 58 }, 'Nidoran♂': { DE: 60 },
-  'Nidorina': { DE: 68, OT: 70, NT: 70, FB: 68 }, 'Nidorino': { DE: 70, OT: 68, NT: 68, FB: 70 },
+  'Nidorina': { DE: 68, OT: 70, NT: 70, FB: 68 }, 'Nidorino': { DE: 70, OT: 68, NT: 68, FB: 70, LB: 65 },
   'Nidoqueen': { OT: 86, NT: 86, FB: 84, DE: 80 }, 'Nidoking': { OT: 86, NT: 85, FB: 86, DE: 82 },
   'Zubat': { cap: 45 }, 'Golbat': { cap: 60 },
   'Sandslash': { FB: 84, DE: 82 },
@@ -603,10 +615,15 @@ for (const [name, o] of Object.entries(OVERRIDES)) {
     RATING[key][i] = Math.max(20, Math.min(99, r));
   }
 }
+function baseRating(dex, slotId) { return RATING[SLOT_BY_ID[slotId].f][dex - 1]; }
+function shinyEarned(dex, slotId) { return baseRating(dex, slotId) >= SHINY_FIT; }
 function rating(dex, slotId, shiny) {
-  const r = RATING[SLOT_BY_ID[slotId].f][dex - 1];
-  return shiny ? Math.min(99, r + SHINY_BONUS) : r;
+  const r = baseRating(dex, slotId);
+  return shiny && r >= SHINY_FIT ? Math.min(99, r + SHINY_BONUS) : r;
 }
+// "% of perfect" measured from a replacement-level team (BASELINE) up to the perfect lineup, so the number tracks the record.
+const BASELINE = 60;
+const toPct = (v, best) => Math.max(0, Math.min(1, (v - BASELINE) / (best - BASELINE)));
 function teamOVR(picks) { // picks: {slotId: {dex, shiny}}
   let t = 0; for (const s of SLOTS) { const p = picks[s.id]; if (p) t += s.imp * rating(p.dex, s.id, p.shiny); }
   return t / IMP_SUM;
@@ -645,23 +662,23 @@ function mulberry32(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = 
 function gauss(rng) { let u = 0, v = 0; while (!u) u = rng(); while (!v) v = rng(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
 
 const OPPONENTS = [
-  ['Pallet Town Rookies', 27.5],
-  ['Viridian Forest Rangers', 21.5],
-  ['Pewter City Boulders', 23.5],
-  ['Cerulean Capes', 18.5],
-  ['S.S. Anne Sailors', 25.5],
-  ['Vermilion Voltage', 16.5],
-  ['Rock Tunnel Miners', 20.5],
-  ['Lavender Specters', 14.5],
-  ['Celadon Gardeners', 19.5],
-  ['Cycling Road Bikers', 17.5],
-  ['Fuchsia Ninjas', 12.5],
-  ['Safari Zone Stampede', 15.5],
-  ['Saffron Psychics', 10.5],
-  ['Seafoam Glaciers', 8.5],
-  ['Cinnabar Volcanoes', 13.5],
-  ['Victory Road Titans', 6.5],
-  ['Indigo Plateau Elite', 3.5],
+  ['Pallet Town Rookies', 26],
+  ['Viridian Forest Rangers', 20],
+  ['Pewter City Boulders', 22],
+  ['Cerulean Capes', 17],
+  ['S.S. Anne Sailors', 24],
+  ['Vermilion Voltage', 15],
+  ['Rock Tunnel Miners', 19],
+  ['Lavender Specters', 13],
+  ['Celadon Gardeners', 18],
+  ['Cycling Road Bikers', 16],
+  ['Fuchsia Ninjas', 11],
+  ['Safari Zone Stampede', 14],
+  ['Saffron Psychics', 9],
+  ['Seafoam Glaciers', 7],
+  ['Cinnabar Volcanoes', 12],
+  ['Victory Road Titans', 5],
+  ['Indigo Plateau Elite', 2],
 ]; // [name, OVR gap below a perfect team]
 
 const PLAYOFF_ROUNDS = [ // [round, opponent, OVR gap below perfect, how a loss here reads]
@@ -679,7 +696,7 @@ function oppSeed(i, s) { // NFL-style: 2v7, 3v6, 4v5; #1 gets the lowest seed le
 function playGame(ovr, opp, rng, perfect) {
   let m = (ovr - opp) * 1.8 + gauss(rng) * 7;
   if (perfect) m = Math.max(3, Math.abs(m));
-  let diff = Math.round(m); if (diff === 0) diff = m >= 0 ? 1 : -1;
+  let diff = Math.round(Math.max(-31, Math.min(31, m))); if (diff === 0) diff = m >= 0 ? 1 : -1;
   const base = 10 + Math.round(rng() * 17);
   return { us: diff > 0 ? base + diff : base, them: diff > 0 ? base : base - diff, win: diff > 0 };
 }
@@ -694,7 +711,7 @@ function simulateSeason(picks) {
     return Object.assign({ week: i + 1, name, opp }, playGame(ovr, opp, rng, perfect));
   });
   const wins = games.filter(g => g.win).length;
-  const pct = ovr / OPTIMAL.ovr;
+  const pct = toPct(ovr, OPTIMAL.ovr);
   // Playoffs: 10+ wins gets in. 14+ wins = #1 seed and a first-round bye.
   const seed = seedFor(wins), playoffs = [];
   let finish = 'Missed the playoffs', champ = false;
@@ -713,7 +730,7 @@ function simulateSeason(picks) {
 }
 function gradeFor(pct, perfect) {
   if (perfect) return 'S';
-  const g = [[.96, 'A+'], [.93, 'A'], [.90, 'A-'], [.87, 'B+'], [.84, 'B'], [.80, 'B-'], [.77, 'C+'], [.74, 'C'], [.71, 'C-'], [.67, 'D']];
+  const g = [[.93, 'A+'], [.87, 'A'], [.81, 'A-'], [.74, 'B+'], [.66, 'B'], [.58, 'B-'], [.52, 'C+'], [.46, 'C'], [.40, 'C-'], [.32, 'D']];
   for (const [t, l] of g) if (pct >= t) return l; return 'F';
 }
 
@@ -729,8 +746,8 @@ function groupScore(picks, ids) {
     const s = SLOT_BY_ID[id], p = picks[id], o = OPTIMAL.picks[id];
     mine += s.imp * rating(p.dex, id, p.shiny); best += s.imp * rating(o.dex, id, false); w += s.imp;
   }
-  const pct = mine / best;
-  return { avg: mine / w, best: best / w, pct, grade: pct >= 1 ? 'A+' : gradeFor(pct, false) };
+  const pct = toPct(mine / w, best / w);
+  return { pct, grade: pct >= 1 ? 'A+' : gradeFor(pct, false) };
 }
 function unitReport(picks) {
   return UNITS.map(u => {
@@ -747,7 +764,6 @@ function bestFit(dex) {
   for (const s of SLOTS) { const r = rating(dex, s.id, false); if (!best || r > best.r) best = { pos: s.pos, id: s.id, r }; }
   return best;
 }
-const OL = ['OT', 'OG', 'C'], DL = ['DE', 'NT'], SPEEDY = ['WR', 'SLOT', 'CB', 'KR', 'RB', 'S'], BIG = ['OT', 'OG', 'C', 'NT', 'FB'];
 const SPECIAL = {
   'Magikarp': f => 'Used Splash. Nothing happened. Every single snap.',
   'Ditto': f => 'Transformed into whoever lined up across from him. Somehow still perfectly average.',
@@ -755,7 +771,7 @@ const SPECIAL = {
   'Snorlax': f => BIG.includes(f) || DL.includes(f) ? 'Fell asleep over the ball. Nobody could move him anyway.' : SPEEDY.includes(f) ? `Snorlax at ${f}. Asleep before the first route.` : 'Blocked the path, like Snorlax always does.',
   'Slowpoke': f => SPEEDY.includes(f) || f === 'QB' ? 'Got to the ball… about three plays later.' : 'Takes a while to react, but 90 HP keeps him upright.',
   'Slowbro': f => SPEEDY.includes(f) ? 'Ran routes with a Shellder chewing his tail. Not fast.' : null,
-  'Machamp': f => ['WR', 'SLOT', 'TE'].includes(f) ? 'Four arms. No ball is uncatchable.' : OL.includes(f) ? 'Four arms means four hands to hold with, and the refs only see two.' : 'Four arms, 130 Attack. Tackles two ball carriers at once.',
+  'Machamp': f => ['WR', 'SLOT', 'TE'].includes(f) ? 'Four arms. No ball is uncatchable.' : OL.includes(f) ? 'Four arms means four hands to hold with, and the refs only see two.' : 'Four arms. Tackles two ball carriers at once.',
   'Hitmonlee': f => ['K', 'P'].includes(f) ? 'Literally a pair of legs. Born to kick.' : 'Hi Jump Kick is technically a penalty here.',
   'Hitmonchan': f => OL.includes(f) || DL.includes(f) ? 'Hand-fighting champion. Rushers got jabbed at the line.' : null,
   'Abra': f => f === 'KR' ? 'Teleported to the end zone. Twice.' : f === 'QB' ? 'Brilliant mind, but sleeps 18 hours a day. Missed film sessions.' : null,
@@ -778,7 +794,7 @@ const SPECIAL = {
   'Gastly': f => 'Mostly gas. Tackling him is like grabbing smoke.',
   'Gyarados': f => DL.includes(f) || f === 'OLB' ? 'Hyper Beam off the edge. QBs panic.' : null,
   'Dragonite': f => ['QB', 'RB', 'FB'].includes(f) ? 'Just flies over the line on short yardage. Unstoppable sneak.' : null,
-  'Cloyster': f => BIG.includes(f) ? '180 Defense. A clamshell with a jersey.' : null,
+  'Cloyster': f => BIG.includes(f) ? 'A clamshell with a jersey. Nothing gets through.' : null,
   'Rhydon': f => DL.includes(f) || f === 'ILB' || f === 'FB' ? 'Drill horn first through the A-gap.' : null,
   'Tauros': f => ['OLB', 'ILB', 'RB', 'DE'].includes(f) ? 'Literally a bull. Running into people is the whole job.' : null,
   'Arcanine': f => ['RB', 'KR', 'WR', 'SLOT'].includes(f) ? 'Legendary-tier speed hiding in a regular roster spot.' : null,
@@ -807,84 +823,127 @@ const SPECIAL = {
   'Mr. Mime': f => OL.includes(f) ? 'Put up an invisible wall. Barrier blocks every rusher.' : 'Mimed catching the ball. It did not count.',
   'Kingler': f => ['ILB', 'OLB', 'DE'].includes(f) ? 'One giant 10,000-horsepower claw. Strips the ball every time.' : null,
   'Primeape': f => 'Pure rage on every snap. Personal fouls included.',
-  'Nidoking': f => ['DE', 'ILB', 'OLB', 'TE'].includes(f) ? 'Poison horn plus 92 Attack. Old-school enforcer.' : null,
+  'Nidoking': f => ['DE', 'ILB', 'OLB', 'TE'].includes(f) ? 'Poison horn and a mean streak. Old-school enforcer.' : null,
   'Charizard': f => f === 'QB' ? 'Throws fire, literally. Ball security is a concern.' : null,
   'Blastoise': f => BIG.includes(f) ? 'Two water cannons for pancake blocks.' : null,
   'Venusaur': f => BIG.includes(f) ? 'A flower on its back the size of a car. Planted.' : null,
-  'Jolteon': f => SPEEDY.includes(f) ? '130 Speed and spiky fur. Nobody wants to tackle him.' : null,
-  'Flareon': f => ['K', 'P'].includes(f) ? '130 Attack leg. Touchbacks every time.' : null,
+  'Jolteon': f => SPEEDY.includes(f) ? 'Spiky fur and blazing speed. Nobody wants to tackle him.' : null,
+  'Flareon': f => ['K', 'P'].includes(f) ? 'Leg like a cannon. Touchbacks every time.' : null,
   'Vaporeon': f => 'Melts into water when hit. Very hard to tackle cleanly.',
 };
-const GOOD_LINES = {
-  QB: p => `${p.spc} Special. Reads coverages before the snap.`,
-  RB: p => `${p.spe} Speed and ${p.atk} Attack. Arm tackles slide right off.`,
-  FB: p => `${p.def} Defense as a lead blocker. Linebackers file insurance claims.`,
-  WR: p => `${p.spe} Speed. Corners are still looking for him.`,
-  TE: p => `Big enough to block, quick enough (${p.spe} SPE) to leak out for 15.`,
-  OT: p => `${p.def} Defense on the edge. The blind side is locked down.`,
-  OG: p => `${p.def} DEF and ${p.hp} HP. A phone-booth brawler.`,
-  C:  p => `Anchors the middle with ${p.def} Defense and makes all the line calls.`,
-  DE: p => `${p.atk} Attack off the edge. QBs hear footsteps.`,
-  NT: p => `${p.hp} HP over the center. Double teams just bounce off.`,
-  OLB: p => `${p.spe} Speed setting the edge, ${p.atk} Attack finishing.`,
-  ILB: p => `${p.atk} Attack coming downhill. Running backs reconsider their careers.`,
-  CB: p => `${p.spe} Speed in man coverage. Receivers get blanketed.`,
-  S:  p => `${p.spc} Special reading the QB's eyes from centerfield.`,
-  K:  p => `${p.spc} Special accuracy and a ${p.atk}-Attack leg. Automatic from 50.`,
-  P:  p => `Booming ${p.atk}-Attack leg. Coffin-corner specialist.`,
-  KR: p => `${p.spe} Speed in the return game. Coverage units hate him.`,
-  SLOT: p => `${p.spe} Speed working the middle. Linebackers can't stay with him.`,
+// Position groups for flavor text
+const GROUP_OF = { OT: 'OL', OG: 'OL', C: 'OL', DE: 'DL', NT: 'DL', OLB: 'LB', ILB: 'LB', CB: 'DB', S: 'DB',
+  WR: 'REC', SLOT: 'REC', TE: 'REC', RB: 'RB', FB: 'FB', QB: 'QB', K: 'KICK', P: 'KICK', KR: 'RET' };
+const GENERIC = {
+  good: {
+    OL: ['{N} gave up zero sacks all year. The QB sends him gift baskets.', '{N} was a brick wall. Pass rushers went home sore.'],
+    DL: ['{N} lived in the backfield. Opposing QBs had nightmares.', '{N} collapsed the pocket every other snap.'],
+    LB: ['{N} was in on every tackle. Every. Single. One.', '{N} read the run and blew it up before it started.'],
+    DB: ['{N} shut down his half of the field. Receivers stopped asking for the ball.', '{N} had more interceptions than the other team had touchdowns.'],
+    REC: ['{N} caught everything thrown within a mile of him.', '{N} got open like it was a practice drill.'],
+    RB: ['{N} broke tackle after tackle. Highlight reel every week.', '{N} found the hole and was gone.'],
+    FB: ['{N} paved a highway for the run game.', '{N} flattened linebackers so the RB never got touched.'],
+    QB: ['{N} carved up defenses all season.', '{N} never panicked. Third and long? No problem.'],
+    KICK: ['{N} was automatic. Money from anywhere.', '{N} pinned teams deep every time.'],
+    RET: ['{N} flipped the field on every return.', 'Coverage teams had no answer for {N}.'],
+  },
+  bad: {
+    OL: ['{N} gave up more sacks than the QB could count.', 'Pass rushers ran around {N} like he was a traffic cone.'],
+    DL: ['{N} got pushed back five yards every snap.', 'Running backs used {N} as a landmark: run right past him.'],
+    LB: ['{N} kept missing tackles. Running backs waved on their way by.', '{N} was always one step late to the ball.'],
+    DB: ['{N} got burned deep. Repeatedly.', 'Receivers were wide open next to {N} all season.'],
+    REC: ['{N} had more drops than catches.', '{N} never got open. Corners just stood on his toes.'],
+    RB: ['{N} ran straight into his own linemen all year.', '{N} went down on first contact. Every time.'],
+    FB: ['{N} couldn\'t clear a path for anybody.', '{N} bounced off linebackers like a pinball.'],
+    QB: ['{N} threw more picks than touchdowns.', '{N} held the ball forever. Sack, sack, sack.'],
+    KICK: ['{N} shanked it. More than once. In big moments.', 'Every {N} kick was an adventure, and not the fun kind.'],
+    RET: ['{N} called a fair catch on literally everything.', '{N} fumbled the opening kickoff. Twice.'],
+  },
 };
-function weakLine(f, p) {
-  const w = FORMULAS[f].w, st = { hp: Math.min(p.hp, 150), atk: p.atk, def: p.def, spc: p.spc, spe: p.spe };
-  const weak = Object.keys(w).sort((a, b) => (st[a] - 80) * w[a] - (st[b] - 80) * w[b])[0]; // most costly stat
-  const v = p[weak];
-  if (weak === 'def' && (OL.includes(f) || f === 'NT' || f === 'FB')) return `${v} Defense up front. Defenders went through him like a revolving door.`;
-  if (weak === 'spe' && SPEEDY.includes(f)) return `${v} Speed at ${f}. He'd lose a footrace to a Slowpoke.`;
-  if (weak === 'spe' && (f === 'OT' || DL.includes(f) || f === 'OLB')) return `${v} Speed. Got beaten around the edge all season.`;
-  if (weak === 'spe' && f === 'QB') return `${v} Speed in the pocket. Sacked before the play clock hit zero.`;
-  if (weak === 'spc' && f === 'QB') return `${v} Special at QB. Kept reading the playbook upside down.`;
-  if (weak === 'atk' && (f === 'K' || f === 'P')) return `${v}-Attack leg. Kicks die at the 30.`;
-  if (weak === 'atk' && (DL.includes(f) || f === 'OLB' || f === 'ILB')) return `${v} Attack. The blocker barely noticed him.`;
-  return {
-    hp: `${v} HP. One big hit and he's on the injury report.`,
-    atk: `${v} Attack. Couldn't push a blocking sled downhill.`,
-    def: `${v} Defense. Got bulldozed every snap.`,
-    spc: `${v} Special. Blew his assignment more than once.`,
-    spe: `${v} Speed. Got lapped.`,
-  }[weak];
+const TYPE_FLAVOR = { // type -> tone -> group (or '*') -> lines
+  Normal:   { good: { '*': ['{N} doesn\'t do anything flashy. Just does the job, every snap.'] },
+              bad:  { '*': ['{N} looked lost out there. Normal is one thing; this was something else.'] } },
+  Fire:     { good: { DL: ['{N} brought the heat off the edge. Literally.'], REC: ['{N} was on fire all season. Defenders didn\'t want to get close.'], RB: ['{N} left scorch marks on the turf.'], RET: ['{N} lit up the return game.'], '*': ['{N} played with fire and it worked.'] },
+              bad:  { OL: ['{N} kept setting his own pads on fire. Hard to hold a block like that.'], KICK: ['{N} kept torching the ball before it left the tee.'], '*': ['{N} burned out by the second quarter.'] } },
+  Water:    { good: { OL: ['{N} is a wall of water. You don\'t move the ocean.'], DL: ['{N} washed over blockers like a tidal wave.'], QB: ['{N} throws a smooth, wet spiral. Receivers love it.'], '*': ['{N} went with the flow and the flow went great.'] },
+              bad:  { RET: ['{N} kept slipping on his own puddles.'], REC: ['{N} left a puddle on every route. Then fell in it.'], KICK: ['Every {N} kick was soggy.'], '*': ['{N} was a fish out of water at this spot.'] } },
+  Grass:    { good: { OL: ['{N} got rooted in place. Nobody moved him off his spot.'], KICK: ['{N} plants his foot like a tree. Perfectly still before every kick.'], '*': ['{N} grew into the role nicely.'] },
+              bad:  { RET: ['{N} tried to return kicks with roots in the ground.'], REC: ['{N} kept stopping mid-route to soak up some sun.'], DB: ['{N} got planted. Receivers ran right past.'], DL: ['{N} spent most snaps photosynthesizing instead of rushing.'], '*': ['{N} wilted under the stadium lights.'] } },
+  Electric: { good: { REC: ['{N} hits top speed in a flash. Literally.'], RET: ['{N} was a lightning bolt on returns.'], DB: ['{N} closed on the ball at the speed of electricity.'], QB: ['{N} has a lightning-quick release. Ball\'s out before the rush gets there.'], '*': ['{N} brought the energy every snap.'] },
+              bad:  { OL: ['{N} kept shocking his own linemen in the huddle.'], DL: ['{N} short-circuited at the line of scrimmage.'], KICK: ['{N} zapped the holder. Twice.'], '*': ['{N} short-circuited at this position.'] } },
+  Ice:      { good: { DB: ['{N} froze receivers in their tracks.'], QB: ['Ice in the veins on third down.'], '*': ['{N} stayed cool under pressure.'] },
+              bad:  { RB: ['{N} slipped on his own ice every cut.'], RET: ['{N} froze. Not the clutch kind.'], '*': ['{N} looked frozen out there, and not in a good way.'] } },
+  Fighting: { good: { LB: ['{N} lives for contact. Every snap is a brawl he wins.'], DL: ['{N} hand-fights blockers like it\'s a title bout.'], FB: ['{N} throws haymakers as a lead blocker.'], TE: ['{N} blocks like it\'s a title fight, then catches the ball anyway.'], OL: ['{N} treats every block like a sparring match. Undefeated.'], '*': ['{N} fought for every inch.'] },
+              bad:  { KICK: ['{N} kept trying to punch the ball instead of kicking it.'], DB: ['{N} wanted to fight the receiver instead of covering him. Flags everywhere.'], REC: ['{N} kept squaring up with the corner instead of running the route.'], QB: ['{N} tried to fight the pass rush instead of throwing. It went poorly.'], '*': ['{N} wanted to fight. This spot needed something else.'] } },
+  Poison:   { good: { LB: ['Nobody wants to tackle {N}. Or get tackled by him.'], DL: ['Blockers refuse to touch {N}. Free run at the QB.'], '*': ['{N} was toxic to opposing offenses.'] },
+              bad:  { REC: ['QBs were scared to throw to {N}. Toxic hands.'], KICK: ['Every ball {N} kicked came back slightly toxic.'], QB: ['Receivers kept dropping {N}\'s passes on purpose. Nobody wanted to touch them.'], '*': ['{N} poisoned the locker room more than the opponent.'] } },
+  Ground:   { good: { OL: ['{N} is planted like a mountain. Good luck getting past.'], DL: ['{N} turned the middle into quicksand.'], FB: ['{N} plows the road like a bulldozer.'], '*': ['{N} stayed grounded and got the job done.'] },
+              bad:  { RET: ['{N} kept burrowing instead of running.'], REC: ['{N} tunneled under the defense and came up in the wrong end zone.'], KICK: ['{N} kept digging holes in the kicking tee.'], '*': ['{N} got stuck in the mud at this spot.'] } },
+  Flying:   { good: { REC: ['{N} just goes up and gets it. Nobody\'s higher in the air.'], DB: ['{N} patrols the skies. Deep balls go to die.'], RET: ['{N} flew past the coverage team.'], DL: ['{N} swooped off the edge. QBs never saw him coming.'], '*': ['{N} soared at this spot.'] },
+              bad:  { OL: ['{N} kept flying off the line before the snap. False starts all day.'], DL: ['{N} got blown away by a stiff breeze and a pulling guard.'], FB: ['{N} kept taking off mid-block.'], '*': ['{N} kept taking off mid-play. Coaches want feet on the ground.'] } },
+  Dragon:   { good: { '*': ['Dragons don\'t lose fights. {N} sure didn\'t.'] },
+              bad:  { '*': ['{N} needs to grow up a little before playing here.'] } },
+  Psychic:  { good: { QB: ['{N} read the defense before the huddle broke.'], DB: ['{N} knew where the ball was going before the QB did.'], KICK: ['{N} guided every kick in with his mind.'], '*': ['{N} saw it all coming.'] },
+              bad:  { OL: ['{N} is a genius, but geniuses get flattened on the line.'], DL: ['{N} predicted the run perfectly and still got pancaked.'], FB: ['{N} saw the hit coming. Couldn\'t stop it.'], '*': ['{N} saw the future. It was bad at this position.'] } },
+  Bug:      { good: { LB: ['Swarming defense. {N} was everywhere.'], DB: ['{N} bugged receivers all game long.'], DL: ['{N} swarmed the backfield.'], '*': ['{N} was a pest for the other team.'] },
+              bad:  { OL: ['{N} got squashed. Bugs and linemen don\'t mix.'], DL: ['{N} got stepped on. Literally.'], QB: ['{N} kept getting swatted.'], '*': ['{N} bugged out at this position.'] } },
+  Rock:     { good: { OL: ['{N} is a literal rock. Immovable.'], DL: ['{N} was a boulder in the middle. Runs went nowhere.'], FB: ['{N} cleared the way like a landslide.'], LB: ['Running into {N} is like running into a cliff.'], '*': ['{N} was rock solid.'] },
+              bad:  { RET: ['{N} rolled downhill fast but couldn\'t change direction.'], REC: ['{N} ran routes like a falling rock: one direction only.'], DB: ['Receivers just ran around {N}. Rocks don\'t turn.'], KICK: ['{N} kicked the ball like it was a boulder. Ten yards.'], '*': ['{N} sank like a stone at this spot.'] } },
+  Ghost:    { good: { DB: ['{N} phased through blockers like they weren\'t there.'], RET: ['Defenders kept grabbing {N} and coming up with air.'], QB: ['{N} vanished in the pocket. Sacks: zero.'], LB: ['{N} appeared in the backfield out of nowhere. Spooky.'], '*': ['{N} haunted the other team all game.'] },
+              bad:  { OL: ['{N} is mostly gas. Blockers walked right through him.'], DL: ['{N} is mostly gas. Linemen walked right through him.'], FB: ['{N} is mostly gas. The linebacker didn\'t even slow down.'], '*': ['{N} vanished at the worst moments. Spooky, but not helpful.'] } },
+};
+const STAGE_FLAVOR = {
+  bad: { '1': ['{N} hasn\'t evolved yet. Got pushed around by the grown-ups.'] },
+  good: { 'L': ['{N} is a legendary for a reason.'] },
+};
+const OL = ['OT', 'OG', 'C'], DL = ['DE', 'NT'], SPEEDY = ['WR', 'SLOT', 'CB', 'KR', 'RB', 'S'], BIG = ['OT', 'OG', 'C', 'NT', 'FB'];
+function pickLine(lines, seed) { return lines[hashStr(seed) % lines.length]; }
+function flavorFor(p, f, tone, seed) {
+  const g = GROUP_OF[f], name = p.name, opts = [];
+  const sp = SPECIAL[name] && SPECIAL[name](f);
+  if (sp) return sp;
+  for (const t of p.types) {
+    const tf = TYPE_FLAVOR[t] && TYPE_FLAVOR[t][tone];
+    if (!tf) continue;
+    const posKey = f === 'TE' && tf.TE ? 'TE' : g;
+    if (tf[posKey]) opts.push(...tf[posKey]);
+  }
+  const hasEvo = DEX.some(q => q.dex === p.dex + 1 && q.stage !== '1' && q.stage !== 'L') && p.stage === '1';
+  if (tone === 'bad' && hasEvo && BIG.concat(DL).includes(f)) opts.push(...STAGE_FLAVOR.bad['1']);
+  if (tone === 'good' && p.stage === 'L') opts.push(...STAGE_FLAVOR.good.L);
+  if (!opts.length) {
+    for (const t of p.types) { const tf = TYPE_FLAVOR[t] && TYPE_FLAVOR[t][tone]; if (tf && tf['*']) opts.push(...tf['*']); }
+    opts.push(...GENERIC[tone][g]);
+  }
+  return pickLine(opts, seed).replace(/\{N\}/g, name);
 }
 function scoutNote(slotId, pick) {
   const s = SLOT_BY_ID[slotId], f = s.f, p = DEX[pick.dex - 1];
-  const r = rating(pick.dex, slotId, pick.shiny), bf = bestFit(pick.dex), bo = pick.bo;
-  const missed = bo && bo.r - r >= 12 ? bo : null;
-  const tone = r >= 85 || (r >= 75 && (!bo || bo.r - r <= 3)) ? 'good' : (r < 62 || missed) ? 'bad' : 'meh';
-  const special = SPECIAL[p.name] ? SPECIAL[p.name](f) : null;
-  let text = special || (tone === 'bad' ? weakLine(f, p) : tone === 'good' ? GOOD_LINES[f](p) : (r >= 70 ? GOOD_LINES[f](p) + ' Solid, not spectacular.' : weakLine(f, p)));
-  if (tone === 'bad' || tone === 'meh') {
-    if (missed) text += ` You had ${missed.pos} open for him (${missed.r}).`;
-    else if (bf.r - r >= 12) text += ` His best position is ${bf.pos} (${bf.r}).`;
-  }
-  if (pick.shiny) text += ' ✨ Shiny bonus.';
-  return { slotId, pos: s.pos, name: p.name, r, tone, text, gap: Math.max(missed ? missed.r - r : 0, 0) };
+  const r = rating(pick.dex, slotId, pick.shiny);
+  const tone = r >= 80 ? 'good' : r < 64 ? 'bad' : 'meh';
+  let text = tone === 'meh' ? flavorFor(p, f, r >= 72 ? 'good' : 'bad', slotId + p.name) : flavorFor(p, f, tone, slotId + p.name);
+  if (pick.shiny) text += shinyEarned(pick.dex, slotId) ? ' ★ Shiny bonus earned.' : ' ★ Shiny, but out of position. No bonus.';
+  return { slotId, pos: s.pos, name: p.name, r, tone, text };
 }
 function scoutingReport(picks) {
   const notes = SLOTS.map(s => scoutNote(s.id, picks[s.id]));
-  const hits = notes.filter(n => n.tone === 'good').sort((a, b) => b.r - a.r).slice(0, 3);
-  const misses = notes.filter(n => n.tone === 'bad').sort((a, b) => (b.gap - a.gap) || (a.r - b.r)).slice(0, 3);
-  return { notes, hits, misses };
+  const hits = notes.filter(n => n.tone === 'good').sort((a, b) => b.r - a.r).slice(0, 5);
+  const misses = notes.filter(n => n.tone === 'bad').sort((a, b) => a.r - b.r).slice(0, 5);
+  const shiny = notes.find(n => picks[n.slotId].shiny) || null;
+  return { notes, hits, misses, shiny };
 }
 // ENGINE END
 
 // ===================== UI =====================
 const $ = s => document.querySelector(s);
-const SAVE_KEY = 'gridiron151_v3';
+const SAVE_KEY = 'gridiron151_v4';
 const RESPINS = 5;
 let state = freshState();
 let busy = false;
 
 function freshState() {
-  return { picks: {}, respins: { type: RESPINS, stage: RESPINS, poke: RESPINS }, cur: null, sel: null, done: false };
+  return { picks: {}, respins: { type: RESPINS, stage: RESPINS, poke: RESPINS }, cur: null, sel: null, done: false,
+    shinyPick: 1 + Math.floor(Math.random() * 25) }; // one random pick per game is shiny
 }
 function save() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(state)); } catch (e) {} }
 function load() {
@@ -895,11 +954,11 @@ function load() {
 const usedSet = () => new Set(Object.values(state.picks).map(p => p.dex));
 function candidates(type, stage) {
   const used = usedSet();
-  return DEX.filter(p => !used.has(p.dex) && p.types.includes(type) && p.stage === stage);
+  return DEX.filter(p => !used.has(p.dex) && reelTypesOf(p).includes(type) && p.stage === stage);
 }
 const rnd = a => a[Math.floor(Math.random() * a.length)];
 function pickType(stage, exclude) {
-  const ts = TYPE_LIST.filter(t => t !== exclude && (stage ? candidates(t, stage).length : STAGES.some(s => candidates(t, s).length)));
+  const ts = REEL_TYPES.filter(t => t !== exclude && (stage ? candidates(t, stage).length : STAGES.some(s => candidates(t, s).length)));
   return ts.length ? rnd(ts) : null;
 }
 function pickStage(type, exclude) {
@@ -913,19 +972,41 @@ function pickPoke(type, stage, excludeDex) {
   const c = candidates(type, stage).filter(p => p.dex !== excludeDex);
   return c.length ? rnd(c) : null;
 }
-const rollShiny = () => Math.random() < SHINY_ODDS;
 const P = dex => DEX[dex - 1];
 const UP = s => s.toUpperCase();
-// Art: images named by Pokédex number (001.png … 151.png) in any of these folders next to index.html.
-// The game checks each folder in order, so the set can be split across folders. Missing images fall back to type-color tiles.
-const ART_DIRS = ['art/', 'art2/', 'art3/'], ART_EXT = '.png';
-const artSrc = (dex, i = 0) => ART_DIRS[i] + String(dex).padStart(3, '0') + ART_EXT;
-function artMiss(img) {
-  const i = +img.dataset.i + 1;
-  if (i < ART_DIRS.length) { img.dataset.i = i; img.src = artSrc(+img.dataset.dex, i); } else img.remove();
-}
-const artImg = (dex, cls) => `<img class="${cls}" src="${artSrc(dex)}" data-dex="${dex}" data-i="0" alt="" loading="lazy" onload="document.body.classList.add('art-on')" onerror="artMiss(this)">`;
 const openSlots = () => SLOTS.filter(s => !state.picks[s.id]);
+const pickNumber = () => Object.keys(state.picks).length + 1;
+
+// ---------- art ----------
+// Images live next to index.html in art/, art2/ or art3/, named by Pokédex number.
+// Accepts 040.png or 40.png, and .png / .PNG / .jpg / .jpeg / .webp. Missing art falls back to type-color tiles.
+const ART_DIRS = ['art/', 'art2/', 'art3/'];
+const ART_EXTS = ['.png', '.PNG', '.jpg', '.jpeg', '.webp'];
+const ART = {}; // dex -> resolved src | null (none) | Promise (looking)
+let ART_STYLE = null; // naming style of the first image found ({n: 0|1, e: ext}); tried first for the rest
+function artCandidates(dex) {
+  const names = [String(dex).padStart(3, '0'), String(dex)], out = [];
+  if (ART_STYLE) for (const d of ART_DIRS) out.push({ src: d + names[ART_STYLE.n] + ART_STYLE.e, n: ART_STYLE.n, e: ART_STYLE.e });
+  for (const d of ART_DIRS) names.forEach((nm, n) => ART_EXTS.forEach(e => out.push({ src: d + nm + e, n, e })));
+  return out;
+}
+const probe = src => new Promise(r => { const i = new Image(); i.onload = () => r(true); i.onerror = () => r(false); i.src = src; });
+function resolveArt(dex) {
+  if (dex in ART) return ART[dex];
+  ART[dex] = (async () => {
+    const seen = new Set();
+    for (const c of artCandidates(dex)) { if (seen.has(c.src)) continue; seen.add(c.src);
+      if (await probe(c.src)) { ART_STYLE = ART_STYLE || { n: c.n, e: c.e }; ART[dex] = c.src; document.body.classList.add('art-on'); return c.src; } }
+    ART[dex] = null; return null;
+  })();
+  return ART[dex];
+}
+function artImg(dex, cls) { // returns <img> if the art is known, otherwise starts looking and re-renders when found
+  const v = ART[dex];
+  if (typeof v === 'string') return `<img class="${cls}" src="${v}" alt="">`;
+  if (v === undefined) resolveArt(dex).then(s => { if (s) render(); });
+  return '';
+}
 
 function canRespin(kind) {
   const c = state.cur;
@@ -959,7 +1040,7 @@ function animReel(kind, finalVal, dur, shiny, ctxType) {
   return new Promise(res => {
     const strip = $('#reel-' + kind + ' .strip');
     const N = 16 + Math.floor(dur / 120);
-    const fillers = kind === 'type' ? TYPE_LIST : kind === 'stage' ? STAGES : DEX.filter(p => p.types.includes(ctxType)).map(p => p.dex);
+    const fillers = kind === 'type' ? REEL_TYPES : kind === 'stage' ? STAGES : DEX.filter(p => reelTypesOf(p).includes(ctxType)).map(p => p.dex);
     let html = strip.firstElementChild ? strip.firstElementChild.outerHTML : '';
     for (let i = 0; i < N; i++) html += reelItem(kind, rnd(fillers), false);
     html += reelItem(kind, finalVal, shiny);
@@ -975,12 +1056,13 @@ function animReel(kind, finalVal, dur, shiny, ctxType) {
 async function runReels(changes) {
   busy = true; render();
   const c = state.cur, jobs = []; let d = 900;
+  resolveArt(c.dex); // start loading the art while the reels spin
   if (changes.type) { jobs.push(animReel('type', c.type, d)); d += 400; }
   if (changes.stage) { jobs.push(animReel('stage', c.stage, d)); d += 400; }
   jobs.push(animReel('poke', c.dex, d, c.shiny, c.type));
   await Promise.all(jobs);
   busy = false;
-  if (c.shiny) toast(`★ It's a shiny ${UP(P(c.dex).name)}!`);
+  if (c.shiny && changes.first) toast(`★ This is your shiny spin! Put it in the right spot for a bonus.`);
   else if (c.stage === 'L') toast(`A legendary ${UP(P(c.dex).name)} appeared!`);
   render();
 }
@@ -988,8 +1070,8 @@ async function runReels(changes) {
 // ---------- actions ----------
 async function spin() {
   const t = pickType(null), s = pickStage(t), p = pickPoke(t, s);
-  state.cur = { type: t, stage: s, dex: p.dex, shiny: rollShiny() }; state.sel = null; save();
-  await runReels({ type: 1, stage: 1 });
+  state.cur = { type: t, stage: s, dex: p.dex, shiny: pickNumber() === state.shinyPick }; state.sel = null; save();
+  await runReels({ type: 1, stage: 1, first: 1 });
 }
 async function respin(kind) {
   if (!canRespin(kind)) return;
@@ -1001,8 +1083,7 @@ async function respin(kind) {
   } else if (kind === 'stage') {
     c.stage = pickStage(c.type, c.stage); changes.stage = 1;
   }
-  c.dex = pickPoke(c.type, c.stage, kind === 'poke' ? c.dex : undefined).dex;
-  c.shiny = rollShiny();
+  c.dex = pickPoke(c.type, c.stage, kind === 'poke' ? c.dex : undefined).dex; // a shiny spin stays shiny through respins
   state.respins[kind]--; state.sel = null; save();
   await runReels(changes);
 }
@@ -1012,9 +1093,7 @@ function selectSlot(id) {
 }
 function lockIn() {
   const { cur, sel } = state; if (!cur || !sel) return;
-  let bo = null; // remembered for the post-season report only
-  for (const s of openSlots()) { const r = rating(cur.dex, s.id, cur.shiny); if (!bo || r > bo.r) bo = { pos: s.pos, id: s.id, r }; }
-  state.picks[sel] = { dex: cur.dex, shiny: cur.shiny, bo };
+  state.picks[sel] = { dex: cur.dex, shiny: cur.shiny };
   const name = UP(P(cur.dex).name), pos = SLOT_BY_ID[sel].pos;
   state.cur = null; state.sel = null; save();
   blankReels(); render();
@@ -1025,7 +1104,6 @@ function submit() { state.done = true; save(); render(); showResults(); }
 function newGame() { state = freshState(); save(); blankReels(); render(); closeAll(); }
 
 // ---------- rendering ----------
-const rColor = r => r >= 90 ? '#4ade80' : r >= 80 ? '#a3e635' : r >= 70 ? '#fbbf24' : r >= 60 ? '#fb923c' : '#f05252';
 const statColor = v => v >= 100 ? 'var(--hp-g)' : v >= 60 ? 'var(--hp-y)' : 'var(--hp-r)';
 
 function buildField() {
@@ -1033,7 +1111,7 @@ function buildField() {
   for (const s of SLOTS) {
     const b = document.createElement('button');
     b.className = 'slot'; b.dataset.id = s.id;
-    b.innerHTML = `<span class="pos">${s.pos}</span><span class="nm"></span><span class="rt" hidden></span>`;
+    b.innerHTML = `<span class="pos">${s.pos}</span><span class="nm"></span>`;
     b.addEventListener('click', () => selectSlot(s.id));
     document.querySelector(`[data-row="${s.row}"]`).appendChild(b);
   }
@@ -1049,18 +1127,24 @@ function renderField() {
   document.querySelector('.st-wrap').classList.toggle('armed', armed);
   for (const s of SLOTS) {
     const el = document.querySelector(`.slot[data-id="${s.id}"]`), pk = state.picks[s.id];
-    const nm = el.querySelector('.nm'), rt = el.querySelector('.rt');
+    const nm = el.querySelector('.nm');
     el.classList.toggle('filled', !!pk); el.classList.toggle('selected', state.sel === s.id);
     el.querySelector('.star') && el.querySelector('.star').remove();
-    rt.hidden = true;
     if (pk) {
       const p = P(pk.dex);
       el.style.setProperty('--t1', TYPES[p.types[0]].c); el.style.setProperty('--t2', TYPES[p.types[1] || p.types[0]].c);
       nm.textContent = UP(p.name); fitText(nm);
-      if (el.dataset.art !== String(pk.dex)) { el.querySelector('.fart') && el.querySelector('.fart').remove(); el.insertAdjacentHTML('afterbegin', artImg(pk.dex, 'fart')); el.dataset.art = pk.dex; }
+      if (el.dataset.art !== String(pk.dex)) {
+        el.querySelector('.fart') && el.querySelector('.fart').remove();
+        const img = artImg(pk.dex, 'fart');
+        if (img) { el.insertAdjacentHTML('afterbegin', img); el.dataset.art = pk.dex; }
+      }
+      el.classList.toggle('has-art', !!el.querySelector('.fart'));
       if (pk.shiny) el.insertAdjacentHTML('beforeend', '<span class="star">★</span>');
-      if (state.done) { const r = rating(pk.dex, s.id, pk.shiny); rt.hidden = false; rt.textContent = r; rt.style.background = rColor(r); }
-    } else { nm.textContent = ''; nm.style.fontSize = ''; el.querySelector('.fart') && el.querySelector('.fart').remove(); delete el.dataset.art; }
+    } else {
+      nm.textContent = ''; nm.style.fontSize = '';
+      el.querySelector('.fart') && el.querySelector('.fart').remove(); delete el.dataset.art; el.classList.remove('has-art');
+    }
   }
 }
 function renderInfo() {
@@ -1077,9 +1161,12 @@ function renderInfo() {
   const pills = p.types.map(t => `<span class="tpill" style="--c:${TYPES[t].c}">${UP(t)}</span>`).join('');
   const stats = [['HP', p.hp], ['ATK', p.atk], ['DEF', p.def], ['SPC', p.spc], ['SPD', p.spe]].map(([k, v]) =>
     `<div class="st"><div class="k">${k}<b>${v}</b></div><div class="bar"><i style="width:${Math.min(100, v / 1.6)}%;background:${statColor(v)}"></i></div></div>`).join('');
-  const verb = c.stage === 'L' ? 'A legendary' : c.shiny ? 'A shiny' : 'A wild';
-  info.innerHTML = `${artImg(p.dex, 'dart' + (c.shiny ? ' shiny-art' : ''))}<div class="line">${verb} <span class="nm">${UP(p.name)}</span> appeared!</div>
-    <div class="mon" style="margin-top:6px"><span class="dexno">No.${String(p.dex).padStart(3, '0')}</span>${pills}${c.shiny ? '<span class="shiny">★ SHINY +' + SHINY_BONUS + '</span>' : ''}</div>
+  const verb = c.shiny ? 'A shiny' : c.stage === 'L' ? 'A legendary' : 'A wild';
+  const art = artImg(p.dex, 'dart' + (c.shiny ? ' shiny-art' : ''));
+  info.innerHTML = `<div class="dtop">${art ? `<div class="dartbox">${art}</div>` : ''}<div class="dtext">
+      <div class="line">${verb} <span class="nm">${UP(p.name)}</span> appeared!</div>
+      <div class="mon" style="margin-top:6px"><span class="dexno">No.${String(p.dex).padStart(3, '0')}</span>${pills}${c.shiny ? '<span class="shiny">★ SHINY</span>' : ''}</div>
+    </div></div>
     <div class="stats">${stats}</div>`;
 }
 function renderControls() {
@@ -1103,18 +1190,25 @@ function render() {
 // ---------- results ----------
 const gColor = g => g === 'S' || g.startsWith('A') ? '#3ddc84' : g.startsWith('B') ? '#b5e655' : g.startsWith('C') ? '#ffd23f' : g === 'D' ? '#ff9f43' : '#ff5a4f';
 const gChip = g => `<span class="gchip" style="background:${gColor(g)}">${g}</span>`;
+const gWord = g => g === 'A+' ? 'Elite' : g[0] === 'A' ? 'Excellent' : g[0] === 'B' ? 'Solid' : g[0] === 'C' ? 'Shaky' : g === 'D' ? 'Struggling' : 'Liability';
 function seasonStory(res) {
-  if (res.perfect) return 'A perfect lineup. 17–0, three straight playoff wins, and an Indigo Bowl ring. Nobody in Kanto came close.';
+  if (res.perfect) return 'A perfect lineup. Undefeated, a playoff sweep and an Indigo Bowl ring. Nobody in Kanto came close.';
   const rec = `${res.wins}–${res.losses}`;
   if (!res.seed) return res.wins === 9 ? `Finished ${rec} and missed the playoffs on the final weekend. So close.` : `Finished ${rec}. No playoffs this year. ${res.wins <= 4 ? 'At least the draft pick will be high.' : 'A few better placements and this is a wild-card team.'}`;
   const seedTxt = res.seed === 1 ? 'clinched the #1 seed and a first-round bye' : `earned the #${res.seed} seed`;
   if (res.champ) return `Went ${rec}, ${seedTxt}, then ran the table. Indigo Bowl Champions!`;
   const last = res.playoffs[res.playoffs.length - 1];
-  return `Went ${rec} and ${seedTxt}. The run ended in the ${last.round}, falling ${last.us}–${last.them} to the ${last.name}.`;
+  const where = { 'Wild Card Weekend': 'on Wild Card Weekend', 'Divisional Round': 'in the Divisional Round', 'Championship Sunday': 'on Championship Sunday', 'Indigo Bowl': 'in the Indigo Bowl' }[last.round];
+  return `Went ${rec} and ${seedTxt}. The run ended ${where}, falling ${last.us}–${last.them} to the ${last.name}.`;
+}
+function seasonPoints(res) {
+  const all = res.games.concat(res.playoffs.filter(g => !g.bye));
+  return { pf: all.reduce((a, g) => a + g.us, 0), pa: all.reduce((a, g) => a + g.them, 0) };
 }
 function showResults() {
   const res = simulateSeason(state.picks), units = unitReport(state.picks), scout = scoutingReport(state.picks);
   const mvp = scout.notes.reduce((b, n) => n.r > b.r ? n : b);
+  const pts = seasonPoints(res);
   const bracket = PLAYOFF_ROUNDS.map(([round], i) => {
     const g = res.playoffs[i];
     if (!g) return `<div class="rd locked"><div class="rn">${UP(round)}</div><div class="mu dim">Eliminated before this round</div></div>`;
@@ -1123,48 +1217,40 @@ function showResults() {
       <div class="mu ${g.win ? 'w' : ''}"><span class="seed">#${res.seed}</span><b>Your team</b><span class="sc">${g.us}</span></div>
       <div class="mu ${g.win ? '' : 'w'}"><span class="seed">#${g.oppSeed}</span>${g.name}<span class="sc">${g.them}</span></div></div>`;
   }).join('');
-  const games = res.games.map(g => `<tr><td>Wk ${g.week}</td><td>${g.name}<br><small style="color:var(--muted)">OVR ${g.opp.toFixed(1)}</small></td><td class="${g.win ? 'W' : 'L'}">${g.win ? 'W' : 'L'}</td><td class="n">${g.us}–${g.them}</td></tr>`).join('');
-  const noteHTML = n => `<div class="note ${n.tone}"><div class="nh"><span class="tone"></span><b>${UP(n.name)}</b> at ${n.pos}<span class="nr">${n.r}</span></div><div>${n.text}</div></div>`;
+  const games = res.games.map(g => `<tr><td>Wk ${g.week}</td><td>${g.name}</td><td class="${g.win ? 'W' : 'L'}">${g.win ? 'W' : 'L'}</td><td class="n">${g.us}–${g.them}</td></tr>`).join('');
+  const noteHTML = n => `<div class="note ${n.tone}"><div class="nh"><span class="tone"></span><b>${UP(n.name)}</b> at ${n.pos}</div><div>${n.text}</div></div>`;
   const unitCards = units.map(u => {
-    const groups = u.groups.map(g => `<div class="grp"><span>${g.name}</span><span class="gv">${g.avg.toFixed(0)}<small> / ${g.best.toFixed(0)}</small></span>${gChip(g.grade)}</div>`).join('');
-    const ids = new Set(u.groups.flatMap(g => g.ids));
-    const notes = scout.notes.filter(n => ids.has(n.slotId)).map(noteHTML).join('');
+    const groups = u.groups.map(g => `<div class="grp"><span>${g.name}</span><span class="gv">${gWord(g.grade)}</span>${gChip(g.grade)}</div>`).join('');
     const sw = u.groups.length > 1 && u.strength !== u.weakness
-      ? `<p class="sw"><b style="color:var(--green)">Strength:</b> ${u.strength.name} · <b style="color:var(--red)">Weakness:</b> ${u.weakness.name}</p>` : '';
-    return `<div class="unit"><div class="uh"><h4>${u.name}</h4>${gChip(u.grade)}</div>
-      <div class="usub">Unit rating ${u.avg.toFixed(1)} vs. perfect ${u.best.toFixed(1)}</div>
-      ${groups}${sw}
-      <details><summary>Scouting report: every ${u.name.toLowerCase()} pick</summary>${notes}</details></div>`;
+      ? `<p class="sw"><b style="color:var(--hp-g)">Strength:</b> ${u.strength.name} · <b style="color:var(--hp-r)">Weakness:</b> ${u.weakness.name}</p>` : '';
+    return `<div class="unit"><div class="uh"><h4>${u.name}</h4>${gChip(u.grade)}</div>${groups}${sw}</div>`;
   }).join('');
-
   const finishBanner = res.champ ? `<div class="banner">★ ${UP(res.finish)} ★</div>` :
     `<div class="finish ${res.seed ? 'in' : 'out'}">${res.seed ? `#${res.seed} seed · ` : ''}${res.finish}</div>`;
+  const shinyBox = scout.shiny ? `<div class="note ${shinyEarned(state.picks[scout.shiny.slotId].dex, scout.shiny.slotId) ? 'good' : 'bad'}"><div class="nh"><span class="tone"></span><b>★ SHINY ${UP(scout.shiny.name)}</b> at ${scout.shiny.pos}</div><div>${shinyEarned(state.picks[scout.shiny.slotId].dex, scout.shiny.slotId) ? 'Placed in a great spot. The shiny bonus kicked in all season.' : 'Wrong spot for this one. The shiny bonus never kicked in.'}</div></div>` : '';
   $('#results').innerHTML = `
     <button class="mclose" data-close>×</button>
     <h2>SEASON REPORT</h2>
     <div><span class="record">${res.wins}–${res.losses}</span><span class="grade" style="background:${gColor(res.grade)}">${res.grade}</span></div>
     ${finishBanner}
     <p>${seasonStory(res)}</p>
-    ${res.seed ? `<h3>Playoff bracket</h3><div class="bracket">${bracket}</div>` : ''}
     <div class="kpis">
-      <div class="kpi"><b>${res.ovr.toFixed(1)}</b><span>Your OVR</span></div>
-      <div class="kpi"><b>${OPTIMAL.ovr.toFixed(1)}</b><span>Perfect OVR</span></div>
       <div class="kpi"><b>${Math.round(res.pct * 100)}%</b><span>Of perfect</span></div>
+      <div class="kpi"><b>${pts.pf}</b><span>Points for</span></div>
+      <div class="kpi"><b>${pts.pa}</b><span>Points against</span></div>
     </div>
     <div class="btnrow"><button class="btn pri" id="btnCard">Share card</button><button class="btn" id="btnShare">Share text</button></div>
     <div class="btnrow" style="margin-top:8px"><button class="btn" id="btnAgain">Play again</button></div>
-
+    ${res.seed ? `<h3>Playoff bracket</h3><div class="bracket">${bracket}</div>` : ''}
     <h3>Report card</h3>
     <div class="cards3">${units.map(u => `<div class="kpi"><b style="color:${gColor(u.grade)}">${u.grade}</b><span>${u.name}</span></div>`).join('')}</div>
-    <p>MVP: <b>${mvp.name}</b> at ${mvp.pos} (${mvp.r}).</p>
+    <p>Season MVP: <b>${UP(mvp.name)}</b> at ${mvp.pos}.</p>
+    ${shinyBox ? `<h3>Shiny pick</h3>${shinyBox}` : ''}
     ${scout.hits.length ? `<h3>Smart picks</h3>${scout.hits.map(noteHTML).join('')}` : ''}
     ${scout.misses.length ? `<h3>Questionable calls</h3>${scout.misses.map(noteHTML).join('')}` : ''}
-
     <h3>Unit breakdown</h3>${unitCards}
-
-    
     <h3>Regular season</h3><table>${games}</table>
-    <p style="font-size:14px;color:var(--muted)">Perfect OVR is the best score any 25-man lineup can reach. Find it and you go undefeated and win the Indigo Bowl.</p>`;
+    <p style="font-size:14px;color:var(--muted)">% of perfect compares your lineup to the best possible one. Find that lineup and you won't lose a game.</p>`;
   $('#btnAgain').onclick = newGame;
   $('#btnShare').onclick = () => share(res, units, mvp);
   $('#btnCard').onclick = () => showCard(res, units, mvp);
@@ -1179,12 +1265,11 @@ async function share(res, units, mvp) {
   } catch (e) { toast('Could not share. Try again.'); }
 }
 
-
 // ---------- share card (screenshot-ready) ----------
 function showCard(res, units, mvp) {
   const tile = s => {
-    const pk = state.picks[s.id], p = P(pk.dex), r = rating(pk.dex, s.id, pk.shiny);
-    return `<div class="ct" style="--t1:${TYPES[p.types[0]].c};--t2:${TYPES[p.types[1] || p.types[0]].c}">${artImg(p.dex, 'cart')}<span class="cn">${UP(p.name)}</span><span class="cp">${s.pos}${pk.shiny ? '★' : ''}<i class="cr" style="background:${rColor(r)}">${r}</i></span></div>`;
+    const pk = state.picks[s.id], p = P(pk.dex), art = artImg(p.dex, 'cart');
+    return `<div class="ct${art ? ' has-art' : ''}" style="--t1:${TYPES[p.types[0]].c};--t2:${TYPES[p.types[1] || p.types[0]].c}">${art}<span class="cn">${UP(p.name)}</span><span class="cp">${s.pos}${pk.shiny ? ' ★' : ''}</span></div>`;
   };
   const row = (id, cls = '') => `<div class="crow ${cls}">${SLOTS.filter(s => s.row === id).map(tile).join('')}</div>`;
   const finish = res.champ ? 'INDIGO BOWL CHAMPIONS' : res.seed ? `#${res.seed} SEED · ${UP(res.finish)}` : UP(res.finish);
@@ -1204,15 +1289,14 @@ function showCard(res, units, mvp) {
       ${row('o1')}${row('o2', 'wide')}${row('o3')}${row('o4')}
     </div>
     <div class="cst">${row('st', 'spread')}</div>
-    <div class="cfoot">OVR ${res.ovr.toFixed(1)} · MVP ${UP(mvp.name)} (${mvp.pos})</div>`;
-  document.querySelectorAll('#card .cn').forEach(fitText);
+    <div class="cfoot">${Math.round(res.pct * 100)}% of perfect · MVP ${UP(mvp.name)} (${mvp.pos})</div>`;
   closeAll(); openOv('#ov-card');
   document.querySelectorAll('#card .cn').forEach(fitText);
 }
 async function saveCard() {
   try {
     if (!window.html2canvas) await new Promise((ok, bad) => { const s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'; s.onload = ok; s.onerror = bad; document.head.appendChild(s); });
-    const canvas = await html2canvas($('#card'), { backgroundColor: '#0f1729', scale: 2 });
+    const canvas = await html2canvas($('#card'), { backgroundColor: '#0f1729', scale: 2, useCORS: true });
     const blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
     const file = new File([blob], 'gridiron151.png', { type: 'image/png' });
     if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file] }); return; }
@@ -1222,35 +1306,35 @@ async function saveCard() {
 
 // ---------- help ----------
 function buildHelp() {
-  const rows = Object.entries(FORMULAS).map(([k, f]) =>
-    `<tr><td><b>${k}</b></td><td>${Object.entries(f.w).map(([s, w]) => `${s.toUpperCase()} ${Math.round(w * 100)}%`).join(', ')}<br><small style="color:var(--muted)">${f.why}</small></td></tr>`).join('');
+  const total = STAGES.reduce((a, s) => a + STAGE_WEIGHT[s], 0);
+  const pct = s => Math.round(STAGE_WEIGHT[s] / total * 100) + '%';
   $('#help').innerHTML = `
     <button class="mclose" data-close>×</button>
     <h2>HOW TO PLAY</h2>
     <ul>
-      <li>Fill all <b>25 spots</b>: 11 offense, 11 defense (3-4), plus K, P and KR/PR.</li>
-      <li><b>Spin</b> to roll a <b>Type</b>, then an <b>Evolution stage</b>, then a <b>Pokémon</b> (original 151 only).</li>
-      <li>Tap an open spot, then <b>Place</b> it. Once placed, a Pokémon can't move.</li><li>Ratings stay hidden until the season is played. Use the stats to judge where each Pokémon fits.</li>
+      <li>Fill all <b>25 spots</b>: 11 on offense, 11 on defense (a 3-4), plus a kicker, a punter and a returner.</li>
+      <li><b>Spin</b> to roll a <b>type</b>, then an <b>evolution stage</b>, then a <b>Pokémon</b> that matches both.</li>
+      <li>Tap an open spot on the field, then <b>Place</b>. Once placed, a Pokémon can't move.</li>
       <li>Each Pokémon can only be picked once. Other members of its evolution line are still in play.</li>
+      <li>Use each Pokémon's stats to decide where it fits. Nobody tells you if it's a good spot until the season is over.</li>
     </ul>
-    <h3>Respins (5 each, whole game)</h3>
+    <h3>Respins (5 of each per game)</h3>
     <ul>
-      <li><b>Type</b>: new type, <i>same stage</i>, new Pokémon.</li>
-      <li><b>Evolution</b>: same type, new stage, new Pokémon.</li>
-      <li><b>Pokémon</b>: same type and stage, different Pokémon.</li>
+      <li><b>Type</b> rolls a new type and keeps the same evolution stage. The Pokémon changes too.</li>
+      <li><b>Evolution</b> keeps the type and rolls a new stage. Because the stage changes, you get a new Pokémon as well.</li>
+      <li><b>Pokémon</b> keeps the type and stage and gives you a different Pokémon.</li>
     </ul>
     <h3>Odds</h3>
     <ul>
-      <li>All 15 Gen 1 types are equally likely (dual types count for both).</li>
-      <li>Stage 1 ${STAGE_WEIGHT['1']}% · Stage 2 ${STAGE_WEIGHT['2']}% · Stage 3 ${STAGE_WEIGHT['3']}% · Legendary ${STAGE_WEIGHT['L']}%. Only stages that exist for that type can land.</li>
-      <li>Pokémon that never evolve count as Stage 1. Legendaries: Articuno, Zapdos, Moltres, Mewtwo, Mew.</li>
-      <li>Every Pokémon has a 1-in-${Math.round(1 / SHINY_ODDS)} chance to be <b>★ shiny</b> (+${SHINY_BONUS} at every position).</li>
+      <li>Every type is equally likely. Pokémon with two types can show up under either one. Dragon-types show up under Flying.</li>
+      <li>Stage 1 ${pct('1')} · Stage 2 ${pct('2')} · Stage 3 ${pct('3')} · Legendary ${pct('L')}. Only stages that exist for that type can land.</li>
+      <li>Pokémon that never evolve count as Stage 1. The legendaries are Articuno, Zapdos, Moltres, Mewtwo and Mew.</li>
     </ul>
-    <h3>Ratings</h3>
-    <p>Each position weighs Gen 1 base stats differently, then the result is scaled against all 151 (max 99). HP is capped at 150.</p>
-    <table>${rows}</table>
+    <h3>The shiny spin</h3>
+    <p>One random spin each game is shiny. It could be your 2nd pick or your 20th. Put it in a spot that suits it and it gets a boost all season. Put it somewhere it doesn't fit and the boost never kicks in. You'll find out which in your season report.</p>
     <h3>The season</h3>
-    <p>Team OVR is the weighted average of all 25 ratings (QB counts most; K and P least). You play 17 opponents ranging from easy to near-perfect. 10+ wins makes the playoffs (14+ gets the #1 seed and a bye), then it's four rounds to the Indigo Bowl. Upsets happen, but the same lineup always gets the same season. The best possible lineup always goes 17–0 and wins it all.</p><p>After the season you get a report card: Offense, Defense and Special Teams grades, each position group graded against the perfect team, and a scouting note on every pick.</p>`;
+    <p>You play 17 games against teams that range from easy to elite. Win 10 or more to make the playoffs, and 14 or more earns the #1 seed and a bye. Then it's Wild Card Weekend, the Divisional Round, Championship Sunday and the Indigo Bowl. The same lineup always gets the same season.</p>
+    <p>Afterward you get a report card: grades for offense, defense and special teams, your MVP, and your smartest picks and most questionable calls.</p>`;
 }
 
 // ---------- misc ----------
@@ -1260,7 +1344,7 @@ document.addEventListener('click', e => {
   if (e.target.matches('[data-close]') || e.target.classList.contains('overlay')) closeAll();
 });
 let toastT;
-function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2200); }
+function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2600); }
 
 document.querySelectorAll('.rs').forEach(b => b.addEventListener('click', () => respin(b.dataset.r)));
 $('#btnHelp').onclick = () => openOv('#ov-help');
