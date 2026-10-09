@@ -84,10 +84,12 @@ main{max-width:760px;margin:0 auto;padding:0 10px}
 .reel{position:relative;height:var(--rh);overflow:hidden;border-radius:5px;background:var(--paper);border:3px solid var(--ink)}
 .reel::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,rgba(28,34,51,.28),transparent 32%,transparent 68%,rgba(28,34,51,.28))}
 .strip{will-change:transform}
-.ri{height:calc(var(--rh) - 6px);display:flex;align-items:center;justify-content:center;gap:6px;padding:0 4px;
+.ri{height:calc(var(--rh) - 6px);display:flex;align-items:center;justify-content:center;gap:5px;padding:0 2px;
   font-family:var(--px);font-size:9px;color:var(--ink);white-space:nowrap;overflow:hidden}
 .ri .dot{width:10px;height:10px;border-radius:50%;background:var(--c);box-shadow:0 0 0 2px var(--ink);flex:none}
-.ri .pip{display:inline-block;width:7px;height:7px;background:var(--ink);margin-right:2px}
+.ri.stage{flex-direction:column;gap:4px}
+.ri .pips{display:flex;gap:3px}
+.ri .pip{display:inline-block;width:7px;height:7px;background:var(--ink)}
 .ri .pip.off{background:transparent;box-shadow:inset 0 0 0 2px var(--ink)}
 .ri.legend{background:var(--gold);}
 .ri.blank{color:#b7bfd3;font-size:12px}
@@ -121,10 +123,11 @@ main{max-width:760px;margin:0 auto;padding:0 10px}
 .action.go{background:var(--red);color:#fff;box-shadow:0 4px 0 var(--red-d)}
 
 /* ---------- overlays ---------- */
-.overlay{position:fixed;inset:0;z-index:50;background:rgba(6,10,20,.8);backdrop-filter:blur(3px);display:flex;align-items:flex-end;justify-content:center}
+.overlay{position:fixed;inset:0;z-index:50;background:rgba(6,10,20,.88);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y}
 .overlay[hidden]{display:none}
-.modal{background:var(--night2);border:3px solid var(--line);border-bottom:0;border-radius:14px 14px 0 0;width:100%;max-width:760px;max-height:92vh;overflow:auto;padding:18px 16px calc(22px + env(safe-area-inset-bottom))}
-@media(min-width:700px){.overlay{align-items:center}.modal{border-radius:14px;border-bottom:3px solid var(--line)}}
+.modal{background:var(--night2);border:3px solid var(--line);border-bottom:0;border-radius:14px 14px 0 0;width:100%;max-width:760px;margin:6vh auto 0;min-height:94vh;padding:18px 16px calc(22px + env(safe-area-inset-bottom))}
+@media(min-width:700px){.modal{margin:5vh auto;min-height:0;border-radius:14px;border-bottom:3px solid var(--line)}}
+html.locked,html.locked body{overflow:hidden;height:100%}
 .modal h2{font-family:var(--px);font-size:13px;line-height:1.5;margin:0 0 10px;color:var(--paper)}
 .modal h3{font-family:var(--px);font-size:9px;margin:22px 0 10px;color:var(--gold);letter-spacing:1px}
 .modal p,.modal li{font-size:17px;line-height:1.4;color:#cfd6ea}
@@ -190,8 +193,8 @@ summary{cursor:pointer;font-size:16px;font-weight:700;color:var(--gold);padding:
 .modal .menu-btn::before{content:"▶ ";color:var(--red)}
 .modal .menu-btn[hidden]{display:none}
 
-.card-ov{align-items:center;background:rgba(6,10,20,.94)}
-.cardwrap{width:100%;max-width:430px;padding:10px;max-height:100vh;overflow:auto}
+.card-ov{background:rgba(6,10,20,.94)}
+.cardwrap{width:100%;max-width:430px;margin:0 auto;padding:10px 10px calc(16px + env(safe-area-inset-bottom))}
 #card{background:var(--night);border:3px solid var(--line);border-radius:12px;padding:12px 10px 10px;
   background-image:radial-gradient(120% 50% at 50% 0%,#23345f 0%,var(--night) 70%)}
 .cardhead{text-align:center}
@@ -224,6 +227,7 @@ summary{cursor:pointer;font-size:16px;font-weight:700;color:var(--gold);padding:
 .dart.shiny-art{filter:drop-shadow(0 0 8px rgba(245,183,0,.95))}
 .dtext{min-width:0;flex:1}
 .ct .cart{width:100%;height:40px;object-fit:contain;filter:drop-shadow(0 2px 2px rgba(0,0,0,.45))}
+@media(max-width:380px){.ri{font-size:8px}.ri .dot{width:8px;height:8px}}
 @media(min-width:560px){
   :root{--rh:54px}
   .slot .fart{height:72px}.slot .ph{width:58px;height:58px;margin:7px 0}.slot .pos{font-size:13px}.slot .nm{font-size:13px}
@@ -530,6 +534,7 @@ for (const key in FORMULAS) {
 // Explicit position numbers win. cap = max for any position not listed. floor = min for any position not listed.
 // shift = add to every stat-based rating first. OL = OT+OG+C, LB = OLB+ILB, DL = DE+NT.
 const OVERRIDES = {
+  'Exeggcute': { OL: 70 },
   'Kingler': { WR: 63, SLOT: 60 },
   'Onix': { NT: 72, DE: 52, ILB: 50, OLB: 48 },
   'Ninetales': { CB: 78, S: 77 },
@@ -563,7 +568,7 @@ const OVERRIDES = {
   'Cloyster': { OT: 95, OG: 95, C: 92, cap: 82 },
   'Gyarados': { K: 70, P: 72, DE: 90, TE: 85, S: 80, RB: 80},
   'Bulbasaur': { QB: 65, OL: 70 }, 'Ivysaur': { QB: 72, OL: 79 }, 'Venusaur': { QB: 80, OL: 88 },
-  'Bellsprout': { K: 52, P: 50 }, 'Weepinbell': { K: 62, P: 60 }, 'Victreebel': { K: 78, P: 72 },
+  'Bellsprout': { K: 52, P: 70 }, 'Weepinbell': { K: 62, P: 60 }, 'Victreebel': { K: 78, P: 72 },
   'Exeggutor': { QB: 60, OT: 83, DE: 83 },
   'Tangela': { shift: -5 },
   'Pikachu': { QB: 70, WR: 67 }, 'Raichu': { QB: 77, WR: 75 },
@@ -591,7 +596,7 @@ const OVERRIDES = {
   'Mr. Mime': { S: 78, K: 85, cap: 60 },
   'Mew': { RB: 92, SLOT: 93, CB: 92, floor: 85 },
   'Mewtwo': { QB: 99, WR: 99, TE: 99, LB: 99, CB: 99, S: 99, SLOT: 99, RB: 90, DE: 90, floor: 88 },
-  'Beedrill': { QB: 70, WR: 72, DE: 75 },
+  'Beedrill': { QB: 70, WR: 72, DE: 75, CB: 72, S: 72},
   'Paras': { cap: 45 }, 'Parasect': { cap: 60 },
   'Venonat': { cap: 50 }, 'Venomoth': { cap: 68 },
   'Geodude': { shift: 4, OL: 70, DE: 66 }, 'Graveler': { shift: 4, OG: 82, C: 82, OT: 78, DE: 74, NT: 80 },
@@ -1132,7 +1137,7 @@ function pips(stage) {
 }
 function reelItem(kind, val, shiny) {
   if (kind === 'type') return `<div class="ri" style="--c:${TYPES[val].c}"><span class="dot"></span>${UP(val)}</div>`;
-  if (kind === 'stage') return val === 'L' ? `<div class="ri legend">★ LEGEND</div>` : `<div class="ri">${pips(val)}&nbsp;STAGE ${val}</div>`;
+  if (kind === 'stage') return val === 'L' ? `<div class="ri legend">★ LEGEND</div>` : `<div class="ri stage"><span class="pips">${pips(val)}</span>STAGE ${val}</div>`;
   return `<div class="ri">${shiny ? '★' : ''}${UP(P(val).name)}</div>`;
 }
 function setReel(kind, html) {
@@ -1445,10 +1450,11 @@ function buildHelp() {
 }
 
 // ---------- misc ----------
-function openOv(sel) { $(sel).hidden = false; }
-function closeAll() { document.querySelectorAll('.overlay').forEach(o => o.hidden = true); }
+function openOv(sel) { const o = $(sel); o.hidden = false; o.scrollTop = 0; document.documentElement.classList.add('locked'); }
+function closeAll() { document.querySelectorAll('.overlay').forEach(o => o.hidden = true); document.documentElement.classList.remove('locked'); }
 document.addEventListener('click', e => {
-  if (e.target.matches('[data-close]') || e.target.classList.contains('overlay')) closeAll();
+  if (e.target.matches('[data-close]')) closeAll();
+  else if (e.target.classList.contains('overlay') && e.target.id !== 'ov-card') closeAll();
 });
 let toastT;
 function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2600); }
