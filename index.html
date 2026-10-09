@@ -226,7 +226,8 @@ summary{cursor:pointer;font-size:16px;font-weight:700;color:var(--gold);padding:
 .dart{width:100%;height:100%;object-fit:contain}
 .dart.shiny-art{filter:drop-shadow(0 0 8px rgba(245,183,0,.95))}
 .dtext{min-width:0;flex:1}
-.ct .cart{width:100%;height:40px;object-fit:contain;filter:drop-shadow(0 2px 2px rgba(0,0,0,.45))}
+.ct .cbox{width:100%;height:40px;display:flex;align-items:center;justify-content:center}
+.ct .cart{display:block;max-width:none;filter:drop-shadow(0 2px 2px rgba(0,0,0,.45))}
 @media(max-width:380px){.ri{font-size:8px}.ri .dot{width:8px;height:8px}}
 @media(min-width:560px){
   :root{--rh:54px}
@@ -508,7 +509,7 @@ const SLOTS = [
   { id: 'LT', pos: 'LT', f: 'OT', imp: 1.2, row: 'o1' }, { id: 'LG', pos: 'LG', f: 'OG', imp: 0.9, row: 'o1' },
   { id: 'C', pos: 'C', f: 'C', imp: 1.0, row: 'o1' }, { id: 'RG', pos: 'RG', f: 'OG', imp: 0.9, row: 'o1' },
   { id: 'RT', pos: 'RT', f: 'OT', imp: 1.0, row: 'o1' }, { id: 'TE', pos: 'TE', f: 'TE', imp: 0.9, row: 'o1' },
-  { id: 'WR1', pos: 'WR', f: 'WR', imp: 1.1, row: 'o2' }, { id: 'QB', pos: 'QB', f: 'QB', imp: 1.6, row: 'o2' },
+  { id: 'WR1', pos: 'WR', f: 'WR', imp: 1.1, row: 'o2' }, { id: 'QB', pos: 'QB', f: 'QB', imp: 2.25, row: 'o2' },
   { id: 'SLOT', pos: 'SLOT', f: 'SLOT', imp: 1.0, row: 'o2' },
   { id: 'FB', pos: 'FB', f: 'FB', imp: 0.6, row: 'o3' }, { id: 'RB', pos: 'RB', f: 'RB', imp: 1.0, row: 'o4' },
   { id: 'K', pos: 'K', f: 'K', imp: 0.5, row: 'st' }, { id: 'P', pos: 'P', f: 'P', imp: 0.4, row: 'st' },
@@ -534,6 +535,7 @@ for (const key in FORMULAS) {
 // Explicit position numbers win. cap = max for any position not listed. floor = min for any position not listed.
 // shift = add to every stat-based rating first. OL = OT+OG+C, LB = OLB+ILB, DL = DE+NT.
 const OVERRIDES = {
+  'Dragonite': { RB: 85 },
   'Exeggcute': { OL: 70 },
   'Kingler': { WR: 63, SLOT: 60 },
   'Onix': { NT: 72, DE: 52, ILB: 50, OLB: 48 },
@@ -548,20 +550,20 @@ const OVERRIDES = {
   "Farfetch'd": { cap: 55 },
   'Doduo': { WR: 62, TE: 60, DE: 55, OLB: 54, RB: 50, cap: 50 }, 'Dodrio': { WR: 82, TE: 80, DE: 74, OLB: 72, RB: 68, cap: 65 },
   'Chansey': { QB: 60 },
-  'Tauros': { OLB: 89, TE: 86, FB: 78, RB: 82 },
+  'Tauros': { OLB: 89, TE: 86, FB: 89, RB: 85 },
   'Snorlax': { C: 99, OG: 99, NT: 95, OT: 86, FB: 65, cap: 78 },
   'Charmander': { WR: 58, CB: 57, S: 56, RB: 55 }, 'Charmeleon': { WR: 72, CB: 71, S: 70, RB: 66 }, 'Charizard': { WR: 86, CB: 85, S: 84 },
-  'Growlithe': { RB: 66, DE: 64, WR: 62 }, 'Arcanine': { RB: 90, DE: 88, KR: 89},
+  'Growlithe': { RB: 66, DE: 64, WR: 62 }, 'Arcanine': { RB: 92, DE: 88, KR: 89},
   'Ponyta': { WR: 73, CB: 71, S: 69, RB: 67 }, 'Rapidash': { WR: 85, CB: 80, RB: 82 },
-  'Magmar': { QB: 70, WR: 70, RB: 73 },
+  'Magmar': { QB: 87, WR: 70, RB: 73 },
   'Eevee': { KR: 62, SLOT: 56, RB: 52 },
-  'Flareon': { KR: 85, SLOT: 84, RB: 82, WR: 74, K: 75, P: 73 },
-  'Jolteon': { KR: 96, SLOT: 92, RB: 81, WR: 80 },
+  'Flareon': { KR: 85, SLOT: 87, RB: 82, WR: 74, K: 75, P: 73 },
+  'Jolteon': { KR: 96, SLOT: 92, RB: 88, WR: 80 },
   'Vaporeon': { KR: 80, SLOT: 80, QB: 85, RB: 76, C: 55, WR: 70 },
   'Squirtle': { FB: 52 }, 'Wartortle': { FB: 63, OT: 65, DE: 62 },
   'Blastoise': { OT: 82, OG: 87, C: 86, DE: 68, NT: 78 },
   'Golduck': { FB: 76, RB: 68, OT: 65, LB: 70},
-  'Poliwhirl': { CB: 70, OLB: 70, ILB: 70, FB: 68 }, 'Poliwrath': { OT: 84, NT: 84, DE: 82, OG: 82 },
+  'Poliwhirl': { CB: 70, OLB: 70, ILB: 70, FB: 68 }, 'Poliwrath': { OT: 84, NT: 84, DE: 87, OG: 82 },
   'Tentacruel': { QB: 80, CB: 83, S: 86 },
   'Slowbro': { OG: 78, NT: 78, OT: 72, C: 74 },
   'Dewgong': { QB: 70, OT: 78, DE: 78 },
@@ -569,15 +571,15 @@ const OVERRIDES = {
   'Gyarados': { K: 70, P: 72, DE: 90, TE: 85, S: 80, RB: 80},
   'Bulbasaur': { QB: 65, OL: 70 }, 'Ivysaur': { QB: 72, OL: 79 }, 'Venusaur': { QB: 80, OL: 88 },
   'Bellsprout': { K: 52, P: 70 }, 'Weepinbell': { K: 62, P: 60 }, 'Victreebel': { K: 78, P: 72 },
-  'Exeggutor': { QB: 60, OT: 83, DE: 83 },
+  'Exeggutor': { QB: 60, OT: 83, DE: 83, OL: 88},
   'Tangela': { shift: -5 },
   'Pikachu': { QB: 70, WR: 67 }, 'Raichu': { QB: 77, WR: 75 },
   'Magnemite': { CB: 62, S: 62 }, 'Magneton': { CB: 75, S: 75 },
-  'Voltorb': { OL: 65, TE: 58, LB: 58 }, 'Electrode': { OL: 82, TE: 72, LB: 72 },
+  'Voltorb': { OL: 65, TE: 58, LB: 58 }, 'Electrode': { OL: 82, TE: 72, LB: 72, CB: 85},
   'Electabuzz': { WR: 84, TE: 82, S: 72, QB: 72 },
   'Jynx': { TE: 65, K: 68, P: 68, cap: 55 },
   'Articuno': { QB: 93, CB: 90, S: 87, floor: 78 },
-  'Mankey': { DE: 58, LB: 66, TE: 52 }, 'Primeape': { DE: 78, LB: 82, TE: 70 },
+  'Mankey': { DE: 58, LB: 66, TE: 52 }, 'Primeape': { DE: 78, LB: 82, TE: 70, RB: 89},
   'Machop': { ILB: 68, OLB: 66, TE: 66, FB: 68, QB: 62 }, 'Machoke': { ILB: 82, OLB: 80, TE: 80, FB: 82, QB: 76 },
   'Machamp': { ILB: 95, OLB: 92, TE: 93, FB: 95, QB: 89 },
   'Hitmonlee': { K: 92, P: 90, WR: 72, CB: 72 }, 'Hitmonchan': { K: 86, P: 85, WR: 70, CB: 70, ILB: 85, OLB: 82 },
@@ -594,15 +596,15 @@ const OVERRIDES = {
   'Abra': { QB: 75, CB: 68, S: 68 }, 'Kadabra': { QB: 92, CB: 78, S: 78 }, 'Alakazam': { QB: 92, CB: 85, S: 85 },
   'Hypno': { QB: 75 },
   'Mr. Mime': { S: 78, K: 85, cap: 60 },
-  'Mew': { RB: 92, SLOT: 93, CB: 92, floor: 85 },
-  'Mewtwo': { QB: 99, WR: 99, TE: 99, LB: 99, CB: 99, S: 99, SLOT: 99, RB: 90, DE: 90, floor: 88 },
+  'Mew': { RB: 94, SLOT: 93, CB: 92, floor: 85, OL: 70},
+  'Mewtwo': { QB: 99, WR: 99, TE: 95, LB: 99, CB: 99, S: 99, SLOT: 99, RB: 90, DE: 90, floor: 88, OL: 88, NT: 88},
   'Beedrill': { QB: 70, WR: 72, DE: 75, CB: 72, S: 72},
   'Paras': { cap: 45 }, 'Parasect': { cap: 60 },
   'Venonat': { cap: 50 }, 'Venomoth': { cap: 68 },
   'Geodude': { shift: 4, OL: 70, DE: 66 }, 'Graveler': { shift: 4, OG: 82, C: 82, OT: 78, DE: 74, NT: 80 },
-  'Golem': { shift: 4, OG: 94, C: 94, OT: 88, NT: 92 },
+  'Golem': { shift: 4, OG: 94, C: 94, OT: 88, NT: 92, FB: 86, TE: 87},
   'Aerodactyl': { cap: 88 },
-  'Gastly': { LB: 64 }, 'Haunter': { LB: 65 }, 'Gengar': { OLB: 88, ILB: 86 },
+  'Gastly': { LB: 64 }, 'Haunter': { LB: 71 }, 'Gengar': { OLB: 88, ILB: 86 },
 };
 // ---------- Traits: what a Pokémon's body and personality bring to football ----------
 // Each trait adds to specific positions. The total trait boost is capped, and hand-tuned numbers above always win.
@@ -816,14 +818,15 @@ const UNITS = [
   { name: 'Defense', groups: [['Defensive Line', ['DE1', 'NT', 'DE2']], ['Linebackers', ['OLB1', 'ILB1', 'ILB2', 'OLB2']], ['Secondary', ['CB1', 'CB2', 'S1', 'S2']]] },
   { name: 'Special Teams', groups: [['Kicker', ['K']], ['Punter', ['P']], ['Returner', ['KR']]] },
 ];
+// Group and unit grades use the players' actual quality (an 87 QB is an A-), not the gap to a perfect lineup,
+// so one legendary at the top of a position doesn't drag down every good player below it.
+const GROUP_GRADES = [[92, 'A+'], [88, 'A'], [85, 'A-'], [82, 'B+'], [79, 'B'], [76, 'B-'], [73, 'C+'], [70, 'C'], [67, 'C-'], [62, 'D']];
 function groupScore(picks, ids) {
-  let mine = 0, best = 0, w = 0;
-  for (const id of ids) {
-    const s = SLOT_BY_ID[id], p = picks[id], o = OPTIMAL.picks[id];
-    mine += s.imp * rating(p.dex, id, p.shiny); best += s.imp * rating(o.dex, id, false); w += s.imp;
-  }
-  const pct = toPct(mine / w, best / w);
-  return { pct, grade: pct >= 1 ? 'A+' : gradeFor(pct, false) };
+  let mine = 0, w = 0;
+  for (const id of ids) { const s = SLOT_BY_ID[id], p = picks[id]; mine += s.imp * rating(p.dex, id, p.shiny); w += s.imp; }
+  const avg = mine / w;
+  let grade = 'F'; for (const [t, l] of GROUP_GRADES) if (avg >= t) { grade = l; break; }
+  return { pct: avg / 100, avg, grade };
 }
 function unitReport(picks) {
   return UNITS.map(u => {
@@ -1382,7 +1385,7 @@ function showCard(res, units, mvp) {
   const tile = s => {
     const pk = state.picks[s.id], p = P(pk.dex), art = artImg(p.dex, 'cart');
     const side = s.row[0] === 'd' ? 'D' : s.row === 'st' ? 'S' : 'O';
-    return `<div class="ct" data-side="${side}" style="--t1:${TYPES[p.types[0]].c};--t2:${TYPES[p.types[1] || p.types[0]].c}">${art || '<span class="cdot"></span>'}<span class="cplate"><span class="cn">${UP(p.name)}</span><span class="cp">${s.pos}</span></span></div>`;
+    return `<div class="ct" data-side="${side}" style="--t1:${TYPES[p.types[0]].c};--t2:${TYPES[p.types[1] || p.types[0]].c}">${art ? `<span class="cbox">${art}</span>` : '<span class="cdot"></span>'}<span class="cplate"><span class="cn">${UP(p.name)}</span><span class="cp">${s.pos}</span></span></div>`;
   };
   const row = (id, cls = '') => `<div class="crow ${cls}">${SLOTS.filter(s => s.row === id).map(tile).join('')}</div>`;
   const finish = res.champ ? 'INDIGO BOWL CHAMPIONS' : res.seed ? `#${res.seed} SEED · ${UP(res.finish)}` : UP(res.finish);
@@ -1405,6 +1408,14 @@ function showCard(res, units, mvp) {
     <div class="cfoot">${Math.round(res.pct * 100)}% of perfect · MVP ${UP(mvp.name)} (${mvp.pos})</div>`;
   closeAll(); openOv('#ov-card');
   document.querySelectorAll('#card .cn').forEach(fitText);
+  // size each image to fit its box at its true shape (the image saver ignores object-fit and would stretch it)
+  document.querySelectorAll('#card .cart').forEach(img => {
+    const fit = () => {
+      const box = img.parentElement, s = Math.min(box.clientWidth / img.naturalWidth, box.clientHeight / img.naturalHeight);
+      img.style.width = Math.round(img.naturalWidth * s) + 'px'; img.style.height = Math.round(img.naturalHeight * s) + 'px';
+    };
+    if (img.complete && img.naturalWidth) fit(); else img.addEventListener('load', fit, { once: true });
+  });
 }
 async function saveCard() {
   try {
